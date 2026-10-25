@@ -713,7 +713,7 @@ svg{display:block}
 .qmeta{font-size:11px;color:var(--text-3);margin-bottom:13px;font-variant-numeric:tabular-nums}
 
 /* ============ 心愿 ============ */
-.wish-card{padding:15px;border-radius:14px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:150px}
+.wish-card{padding:15px;border-radius:14px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:150px;position:relative}
 .wish-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:9px}
 .stars{display:flex;gap:2px;font-size:11px;letter-spacing:1px}
 .stars .on{color:var(--amber)}
@@ -722,7 +722,19 @@ svg{display:block}
 .wish-price{font-size:12px;color:var(--text-2);margin-top:6px;font-variant-numeric:tabular-nums}
 .wish-note{font-size:11px;color:var(--text-3);margin-top:5px;flex:1}
 .wish-foot{display:flex;align-items:center;gap:8px;margin-top:12px}
-.wish-card.is-done{opacity:.62}
+/* 「已实现」的卡片整体淡一点。不用 opacity，否则删除按钮也会跟着淡到看不见，
+   改成只淡化卡片里的内容，轮廓和按钮保持正常 */
+.wish-card.is-done{background:color-mix(in srgb, var(--surface) 62%, transparent)}
+.wish-card.is-done > .wish-top,
+.wish-card.is-done > h3,
+.wish-card.is-done > .wish-price,
+.wish-card.is-done > .wish-note,
+.wish-card.is-done > .wish-foot{opacity:.62}
+.wish-card.is-done:hover > .wish-top,
+.wish-card.is-done:hover > h3,
+.wish-card.is-done:hover > .wish-price,
+.wish-card.is-done:hover > .wish-note,
+.wish-card.is-done:hover > .wish-foot{opacity:.85}
 
 /* ============ 琐事页 ============ */
 .trivia-layout{display:grid;grid-template-columns:268px minmax(0,1fr);gap:15px;align-items:start}
@@ -849,6 +861,11 @@ svg{display:block}
 .task:hover .row-x,.task-row:hover .row-x,.note:hover .row-x,.trivia-row:hover .row-x,
 .hrow:hover .row-x,.sub-row:hover .row-x,.tree-row:hover .row-x,.tl-item:hover .row-x,
 .pcard:hover .card-x,.qcard:hover .card-x,.wish-card:hover .card-x,
+/* 卡片被键盘选中（Tab 到卡片里的任何可聚焦元素）时也显示 */
+.pcard:focus-within .card-x,.qcard:focus-within .card-x,.wish-card:focus-within .card-x,
+.task:focus-within .row-x,.task-row:focus-within .row-x,.note:focus-within .row-x,
+.trivia-row:focus-within .row-x,.hrow:focus-within .row-x,.sub-row:focus-within .row-x,
+.tree-row:focus-within .row-x,.tl-item:focus-within .row-x,
 .row-x:focus-visible,.card-x:focus-visible{
   opacity:1;pointer-events:auto;
 }
