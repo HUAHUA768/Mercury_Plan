@@ -1,0 +1,90 @@
+# ===== 水星计划 .gitignore =====
+# 只保留原型本身需要的文件：index.html / app.js / styles.css / server.py /
+# README.md / assets/ / 启动脚本。
+
+# ---------- 浏览器独立配置（启动脚本用 --user-data-dir 生成）----------
+# 这里全是 Edge 的缓存、Cookie、登录数据、历史记录，体积上百 MB，
+# 每次启动都会变，绝对不能进版本库。
+.edge-profile/
+.edge-apptest/
+.edge-sandbox/
+.edge-tmp*
+*.edge-profile/
+
+# 通用浏览器数据目录命名，防止以后换个文件夹名又混进来
+**/Default/Cache/
+**/Code Cache/
+**/GPUCache/
+**/ShaderCache/
+**/GrShaderCache/
+**/DawnGraphiteCache/
+**/Service Worker/
+**/Local Storage/
+**/Session Storage/
+**/IndexedDB/
+**/Network/Cookies*
+**/Login Data*
+**/Web Data*
+**/History*
+**/"Local State"
+
+# ---------- 测试 / 截图脚本产生的临时文件 ----------
+# shots/ 下的成品截图（final-*.png）要留，但 _t 里的临时脚本、
+# 样式备份和跑测试留下的日志不留。
+shots/_t/
+shots/*.out
+shots/*.err
+shots/*.log
+shots/tmp-*
+
+# ---------- 工具产生的报告 / 备份 ----------
+.dsh-acl-reports/
+
+# ---------- 操作系统 / 编辑器垃圾 ----------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*~
+*.swp
+*.swo
+
+# VS Code / JetBrains（如果哪天用）
+.vscode/
+.idea/
+*.iml
+
+# ---------- Python 运行时（server.py）----------
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# ---------- Node 运行时（现在没有，预防）----------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+dist/
+build/
+coverage/
+
+# ---------- 本机 / 私有文件 ----------
+# 快捷方式存的是绝对路径，而且只有本机有用；启动脚本才是可移植的入口。
+*.lnk
+.env
+.env.*
+!.env.example
+*.local
+*.bak
+*.tmp
+
+# 历史重写前的仓库全量备份（git bundle）
+*.bundle
