@@ -930,6 +930,13 @@ svg{display:block}
 .set-row-main{display:flex;align-items:center;gap:8px}
 .set-row-main svg{opacity:.7}
 .set-row-side{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-3)}
+.set-actions{display:flex;gap:8px;margin:12px 0 4px}
+.set-actions .btn{display:flex;align-items:center;gap:6px;flex:1;justify-content:center}
+.backup-hint{font-size:10.5px;line-height:1.6;margin:0 2px 10px}
+.export-path{
+  padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:var(--fill);
+  color:var(--text);font-size:12px;line-height:1.6;word-break:break-all;user-select:text;
+}
 .trash-list{display:flex;flex-direction:column;gap:2px;max-height:340px;overflow-y:auto;margin-top:4px}
 .trash-row{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:9px;border:1px solid transparent}
 .trash-row:hover{background:var(--fill);border-color:var(--line)}

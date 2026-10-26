@@ -250,6 +250,112 @@
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 无痕模式等场景忽略 */ }
   }
 
+  const BACKUP_FORMAT = 'mercury-plan-backup';
+  const BACKUP_VERSION = 1;
+  const BACKUP_ARRAYS = ['tasks', 'projects', 'goals', 'habits', 'wishes', 'trivia', 'achievements', 'trash'];
+
+  function createBackup() {
+    return {
+      format: BACKUP_FORMAT,
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      app: '水星计划',
+      data: clone(S),
+      theme: currentThemeId()
+    };
+  }
+
+  async function exportBackup() {
+    try {
+      const invoke = window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke;
+      if (!invoke) throw new Error('桌面文件功能不可用，请重新构建应用');
+      const path = await invoke('export_backup', {
+        content: JSON.stringify(createBackup(), null, 2),
+        defaultName: `水星计划备份-${TODAY_K}.json`
+      });
+      if (!path) return;
+      openExportSuccess(path);
+    } catch (e) {
+      toast(`导出失败：${esc(e && e.message ? e.message : '无法写入文件')}`);
+    }
+  }
+
+  function openExportSuccess(path) {
+    openModal(`<div class="modal export-success" style="position:relative">
+      <h3>备份导出成功</h3>
+      <div class="m-sub">文件已导出到：</div>
+      <div class="export-path">${esc(path)}</div>
+      <div class="modal-foot">
+        <button class="btn btn-amber" data-act="export-success-ok">确定</button>
+      </div>
+    </div>`);
+    document.getElementById('modalLayer').onclick = () => {};
+    setTimeout(() => {
+      const button = document.querySelector('#modalLayer [data-act="export-success-ok"]');
+      if (button) button.focus();
+    }, 45);
+  }
+
+  function validateBackup(payload) {
+    if (!payload || payload.format !== BACKUP_FORMAT || payload.version !== BACKUP_VERSION) {
+      throw new Error('不是受支持的水星计划备份文件');
+    }
+    if (!payload.data || typeof payload.data !== 'object') {
+      throw new Error('备份缺少数据主体');
+    }
+    BACKUP_ARRAYS.forEach(key => {
+      if (!Array.isArray(payload.data[key])) throw new Error(`备份数据不完整：缺少 ${key}`);
+    });
+    if (!payload.data.ui || typeof payload.data.ui !== 'object') {
+      throw new Error('备份缺少界面状态');
+    }
+    if (payload.theme != null && !THEMES.some(t => t.id === payload.theme)) {
+      throw new Error('备份中的主题设置无效');
+    }
+  }
+
+  async function importBackup() {
+    try {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,application/json';
+      const payload = await new Promise((resolve, reject) => {
+        input.onchange = () => {
+          const file = input.files && input.files[0];
+          if (!file) { resolve(null); return; }
+          const reader = new FileReader();
+          reader.onload = () => {
+            try { resolve(JSON.parse(String(reader.result))); }
+            catch (error) { reject(error); }
+          };
+          reader.onerror = () => reject(reader.error || new Error('文件无法读取'));
+          reader.readAsText(file, 'utf-8');
+        };
+        input.click();
+      });
+      if (!payload) return;
+      validateBackup(payload);
+      const imported = clone(payload.data);
+      askConfirm({
+        title: '导入备份并覆盖当前数据？',
+        detail: `将替换当前全部数据（${imported.tasks.length} 条待办、${imported.projects.length} 个项目）。此操作不可自动撤销，请确认你已准备好这份备份。`,
+        okText: '覆盖并导入',
+        onOk: () => {
+          S = imported;
+          S.meta = { ...(S.meta || {}), demo: false, importedAt: new Date().toISOString() };
+          if (!Array.isArray(S.trash)) S.trash = [];
+          if (payload.theme) applyTheme(payload.theme);
+          save();
+          closeModal();
+          render(true);
+          toast('备份已导入');
+        }
+      });
+    } catch (e) {
+      toast(`导入失败：${esc(e && e.message ? e.message : '文件无法读取或格式无效')}`);
+    }
+  }
+
   // ---------- 主题 ----------
   const THEME_KEY = 'mercury.theme';
   const THEMES = [
@@ -1688,7 +1794,11 @@
       `<div class="set-label">外观主题</div>
        <div class="theme-grid">${themeOpts}</div>
        <div class="kv"><span class="k">存储方式</span><span class="v">本地 · localStorage</span></div>
-       <div class="kv"><span class="k">自动备份</span><span class="v">后续版本</span></div>
+       <div class="set-actions">
+         <button class="btn" data-act="backup-export">${icon('arrowUp', 14)}导出备份</button>
+         <button class="btn" data-act="backup-import">${icon('restore', 14)}导入备份</button>
+       </div>
+       <div class="muted backup-hint">备份包含全部用户数据和当前主题；导入会覆盖现有数据。</div>
        <button class="set-row" data-act="trash-open">
          <span class="set-row-main">${icon('trash', 15)}<span>回收站</span></span>
          <span class="set-row-side">${n ? n + ' 条可恢复' : '空'}${icon('chevR', 14)}</span>
@@ -1882,6 +1992,9 @@
       case 'capture': openCapture(); break;
       case 'summary': openSummary(); break;
       case 'settings': openSettings(); break;
+      case 'backup-export': exportBackup(); break;
+      case 'backup-import': importBackup(); break;
+      case 'export-success-ok': closeModal(); break;
 
       case 'toggle-task': toggleTask(id); break;
       case 'task-del': {
