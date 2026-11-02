@@ -72,6 +72,10 @@
     phone: '<rect x="6.4" y="2.6" width="11.2" height="18.8" rx="2.8"/><path d="M10.8 18.4h2.4"/>',
     zap: '<path d="M13.2 2L4.6 13.4H11l-1 8.6 8.8-12h-6.4L13.2 2z"/>',
     inbox: '<path d="M3.6 13.4L6.4 4.6h11.2l2.8 8.8v5.2a1.8 1.8 0 01-1.8 1.8H5.4a1.8 1.8 0 01-1.8-1.8v-5.2z"/><path d="M3.6 13.4h4l1.4 2.4h6l1.4-2.4h4"/>',
+    cycle: '<path d="M20.4 11.2a8.6 8.6 0 00-14.9-4.3L3 9.4"/><path d="M3.6 12.8a8.6 8.6 0 0014.9 4.3L21 14.6"/><path d="M3 5.2v4.2h4.2"/><path d="M21 18.8v-4.2h-4.2"/>',
+    leaf: '<path d="M4.4 19.6C4 12.4 9.2 6.4 20 4.4c.6 8.6-4.6 14.6-11 15"/><path d="M4.4 19.6c2.4-3.5 5.7-5.5 9.1-6.3"/>',
+    scissors: '<circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><path d="M20 4L8.4 15.6"/><path d="M20 20L8.4 8.4"/>',
+    clock: '<circle cx="12" cy="12" r="8.6"/><path d="M12 7.2V12l3.4 2"/>',
     arrowUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
     trash: '<path d="M4 6.6h16"/><path d="M9.4 6.6V4.7c0-.6.5-1.1 1.1-1.1h3c.6 0 1.1.5 1.1 1.1v1.9"/><path d="M6.2 6.6l.9 12.6c.06.9.8 1.6 1.7 1.6h6.4c.9 0 1.64-.7 1.7-1.6l.9-12.6"/><path d="M10.2 10.4v6.6M13.8 10.4v6.6"/>',
     restore: '<path d="M3.4 11.6l8.6-7.4 8.6 7.4"/><path d="M5.9 10.2v9.2h12.2v-9.2"/><path d="M12 20.2v-6M9.4 16.4l2.6-2.6 2.6 2.6"/>'
@@ -210,6 +214,54 @@
       { id: 'w6', name: '换一副降噪耳机', price: 1999, want: 2, status: 'want', note: '' }
     ];
 
+    // 日常记录：一件事反复做，每次追加一条「哪天做的 + 预计下次」
+    const routines = [
+      {
+        id: 'rt1', name: '洗浴巾', icon: 'droplet', cycleDays: 14, note: '两条轮换，攒够一周一起洗。',
+        logs: [
+          { id: 'rl1', date: iso(shift(TODAY, -30)), next: iso(shift(TODAY, -16)), note: '' },
+          { id: 'rl2', date: iso(shift(TODAY, -16)), next: iso(shift(TODAY, 2)), note: '顺便把浴袍也洗了' }
+        ]
+      },
+      {
+        id: 'rt2', name: '换床单被套', icon: 'moon', cycleDays: 21, note: '',
+        logs: [
+          { id: 'rl3', date: iso(shift(TODAY, -66)), next: null, note: '' },
+          { id: 'rl4', date: iso(shift(TODAY, -45)), next: null, note: '' },
+          { id: 'rl5', date: iso(shift(TODAY, -24)), next: null, note: '晒了一下午，有太阳味' }
+        ]
+      },
+      {
+        id: 'rt3', name: '给猫剪指甲', icon: 'scissors', cycleDays: 30, note: '只剪前爪，后爪它不让碰。',
+        logs: [
+          { id: 'rl6', date: iso(shift(TODAY, -62)), next: null, note: '' },
+          { id: 'rl7', date: iso(shift(TODAY, -31)), next: null, note: '这次意外地配合' }
+        ]
+      },
+      {
+        id: 'rt4', name: '给绿萝浇水', icon: 'leaf', cycleDays: 7, note: '土干透了再浇，别浇半截。',
+        logs: [
+          { id: 'rl8', date: iso(shift(TODAY, -21)), next: null, note: '' },
+          { id: 'rl9', date: iso(shift(TODAY, -14)), next: null, note: '' },
+          { id: 'rl10', date: iso(shift(TODAY, -7)), next: null, note: '顺便分了一盆出来' }
+        ]
+      },
+      {
+        id: 'rt5', name: '清洗咖啡机', icon: 'coffee', cycleDays: 30, note: '',
+        logs: [
+          { id: 'rl11', date: iso(shift(TODAY, -58)), next: null, note: '' },
+          { id: 'rl12', date: iso(shift(TODAY, -29)), next: null, note: '换了滤芯' }
+        ]
+      },
+      {
+        id: 'rt6', name: '备份手机照片', icon: 'db', cycleDays: null, note: '想起来就做一次，不设周期。',
+        logs: [
+          { id: 'rl13', date: iso(shift(TODAY, -120)), next: null, note: '' },
+          { id: 'rl14', date: iso(shift(TODAY, -35)), next: null, note: '导了 8GB' }
+        ]
+      }
+    ];
+
     const achievements = [
       { id: 'a1', title: '完成《年度胶片摄影集》', date: iso(shift(TODAY, -25)), source: '项目', note: '印了 60 页，送了三本给朋友。' },
       { id: 'a2', title: '连续阅读 100 天', date: iso(shift(TODAY, -71)), source: '习惯', note: '从三分钟热度到每天睡前半小时。' },
@@ -222,9 +274,9 @@
     return {
       v: 1,
       meta: { demo: true, seedDate: k },
-      tasks, projects, goals, habits, wishes, trivia, achievements, trash: [],
+      tasks, projects, goals, habits, wishes, trivia, achievements, routines, trash: [],
       ui: {
-        route: 'today', cursor: k, taskView: 'day', habitTab: 'build',
+        route: 'today', cursor: k, taskView: 'day', habitTab: 'build', routineTab: 'all',
         goalId: 'g22', expanded: { g1: false, g2: true, g22: true, g12: true, g13: true, g3: true },
         focusDone: {}, calMonth: null, triviaDay: k
       }
@@ -242,8 +294,12 @@
   } catch (e) { S = null; }
   if (!S) S = seed();
 
-  // 旧版本（没有回收站）的数据升级一下，不丢东西
+  // 旧版本（没有回收站 / 没有日常记录）的数据升级一下，不丢东西
   if (!Array.isArray(S.trash)) S.trash = [];
+  if (!Array.isArray(S.routines)) S.routines = [];
+  S.routines.forEach(r => { if (!Array.isArray(r.logs)) r.logs = []; });
+  if (!S.ui) S.ui = {};
+  if (!S.ui.routineTab) S.ui.routineTab = 'all';
   if (S.v !== 2) { S.v = 2; }
 
   function save() {
@@ -252,7 +308,7 @@
 
   const BACKUP_FORMAT = 'mercury-plan-backup';
   const BACKUP_VERSION = 1;
-  const BACKUP_ARRAYS = ['tasks', 'projects', 'goals', 'habits', 'wishes', 'trivia', 'achievements', 'trash'];
+  const BACKUP_ARRAYS = ['tasks', 'projects', 'goals', 'habits', 'wishes', 'trivia', 'achievements', 'routines', 'trash'];
 
   function createBackup() {
     return {
@@ -334,11 +390,14 @@
         input.click();
       });
       if (!payload) return;
+      // 老备份里没有日常记录，补成空数组，别让校验把人拦在门外
+      if (payload.data && !Array.isArray(payload.data.routines)) payload.data.routines = [];
       validateBackup(payload);
       const imported = clone(payload.data);
+      imported.routines.forEach(r => { if (!Array.isArray(r.logs)) r.logs = []; });
       askConfirm({
         title: '导入备份并覆盖当前数据？',
-        detail: `将替换当前全部数据（${imported.tasks.length} 条待办、${imported.projects.length} 个项目）。此操作不可自动撤销，请确认你已准备好这份备份。`,
+        detail: `将替换当前全部数据（${imported.tasks.length} 条待办、${imported.projects.length} 个项目、${imported.routines.length} 个日常事项）。此操作不可自动撤销，请确认你已准备好这份备份。`,
         okText: '覆盖并导入',
         onOk: () => {
           S = imported;
@@ -385,7 +444,7 @@
   // 删除都走这里：进回收站 → 可撤销 → 设置里还能「恢复删除」
   const TRASH_LIMIT = 40;
   const clone = o => (typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
-  const KIND_LABEL = { task: '待办', trivia: '琐事', goal: '目标', project: '项目', habit: '习惯', wish: '心愿', achievement: '成就' };
+  const KIND_LABEL = { task: '待办', trivia: '琐事', goal: '目标', project: '项目', habit: '习惯', wish: '心愿', achievement: '成就', routine: '日常' };
 
   // 记下「这个节点在树里的位置」，形如 [{ title: '根目标' }, { title: '子目标' }, ...]
   // 用标题而不是 id，是因为删除后 id 就已失效，恢复时要靠路径一层层找回来
@@ -440,6 +499,7 @@
     wish: e => putBack(S.wishes, e.items.wishes[0], e.idx),
     achievement: e => putBack(S.achievements, e.items.achievements[0], e.idx),
     habit: e => putBack(S.habits, e.items.habits[0], e.idx),
+    routine: e => putBack(S.routines, e.items.routines[0], e.idx),
     project: e => {
       putBack(S.projects, e.items.projects[0], e.idx);
       const p = e.items.projects[0];
@@ -581,10 +641,43 @@
     toast(`已删除习惯 <b>${esc(hb.name)}</b>`, '撤销', () => { undoTrash(entry.id); render(false); toast('已撤销'); });
   }
 
+  function delRoutine(id) {
+    const r = routineById(id);
+    if (!r) return;
+    const n = (r.logs || []).length;
+    const entry = { id: uid('r'), kind: 'routine', title: r.name, count: 1, idx: S.routines.indexOf(r), items: { routines: [r] } };
+    S.routines.splice(entry.idx, 1);
+    pushTrash(entry);
+    closeDrawer();
+    save(); render(false);
+    toast(`已删除日常事项 <b>${esc(r.name)}</b>${n ? `，含 ${n} 条记录` : ''}`, '撤销', () => { undoTrash(entry.id); render(false); toast('已撤销删除'); });
+  }
+
+  // 单条记录不进回收站，直接用 toast 撤销，避免回收站被零碎记录塞满
+  function delRoutineLog(rid, logId) {
+    const r = routineById(rid);
+    if (!r) return;
+    const idx = (r.logs || []).findIndex(l => l.id === logId);
+    if (idx < 0) return;
+    const log = r.logs[idx];
+    r.logs.splice(idx, 1);
+    save(); render(false);
+    if (drawerOpen()) drawerRoutine(rid);
+    toast('已删除 1 条记录', '撤销', () => {
+      const again = routineById(rid);
+      if (!again) return;
+      again.logs.splice(Math.min(idx, again.logs.length), 0, log);
+      save(); render(false);
+      if (drawerOpen()) drawerRoutine(rid);
+      toast('已撤销删除');
+    });
+  }
+
   // ---------- 派生数据 ----------
   const projById = id => S.projects.find(p => p.id === id);
   const goalById = id => S.goals.find(g => g.id === id);
   const habitById = id => S.habits.find(h => h.id === id);
+  const routineById = id => S.routines.find(r => r.id === id);
 
   function tasksOn(k) {
     return S.tasks.filter(t => t.date === k).sort((a, b) => {
@@ -699,11 +792,58 @@
     return items;
   }
 
+  // ---------- 日常记录：派生数据 ----------
+  // 记录按日期倒序，第 0 条就是最近一次
+  function routineLogs(r) {
+    return (r.logs || []).slice().sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
+  }
+  function routineLast(r) { return routineLogs(r)[0] || null; }
+
+  // 下次该做：优先用上一次记录里填的「预计下次」，没有就按周期推，再没有就是没安排
+  function routineNext(r) {
+    const last = routineLast(r);
+    if (!last) return null;
+    if (last.next) return last.next;
+    if (r.cycleDays) return iso(shift(parse(last.date), Number(r.cycleDays)));
+    return null;
+  }
+  function routineAvgGap(r) {
+    const ds = routineLogs(r).map(l => l.date).reverse(); // 升序
+    if (ds.length < 2) return null;
+    let t = 0;
+    for (let i = 1; i < ds.length; i++) t += diffDays(ds[i], ds[i - 1]);
+    return Math.round(t / (ds.length - 1));
+  }
+  function routineDue(r) {
+    const next = routineNext(r);
+    if (!next) return { next: null, days: null, state: 'none' };
+    const days = diffDays(next, TODAY_K);
+    const state = days < 0 ? 'over' : days === 0 ? 'today' : days <= 7 ? 'soon' : 'later';
+    return { next, days, state };
+  }
+  const DUE_RANK = { over: 0, today: 1, soon: 2, later: 3, none: 4 };
+  function routineSorted() {
+    return S.routines.slice().sort((a, b) => {
+      const da = routineDue(a), db = routineDue(b);
+      const ra = DUE_RANK[da.state], rb = DUE_RANK[db.state];
+      if (ra !== rb) return ra - rb;
+      if (da.next && db.next) return da.next.localeCompare(db.next);
+      return a.name.localeCompare(b.name, 'zh');
+    });
+  }
+  // 到期（含今天）与临近 7 天的都算「该做了」
+  function routinesDue(withinDays) {
+    return routineSorted().filter(r => {
+      const d = routineDue(r);
+      return d.next && d.days <= (withinDays || 0);
+    });
+  }
+
   // ---------- 渲染骨架 ----------
   const NAV = [
     { group: '每日', items: [{ id: 'today', label: '今日总览', icon: 'sun' }] },
     { group: '规划', items: [{ id: 'tasks', label: '日程待办', icon: 'cal' }, { id: 'goals', label: '目标拆解', icon: 'target' }, { id: 'projects', label: '我的项目', icon: 'layers' }] },
-    { group: '记录', items: [{ id: 'habits', label: '习惯', icon: 'repeat' }, { id: 'wishes', label: '心愿清单', icon: 'star' }, { id: 'trivia', label: '琐事记录', icon: 'pen' }, { id: 'achievements', label: '成就', icon: 'trophy' }] }
+    { group: '记录', items: [{ id: 'routines', label: '日常记录', icon: 'cycle' }, { id: 'habits', label: '习惯', icon: 'repeat' }, { id: 'wishes', label: '心愿清单', icon: 'star' }, { id: 'trivia', label: '琐事记录', icon: 'pen' }, { id: 'achievements', label: '成就', icon: 'trophy' }] }
   ];
 
   function navExtra(id) {
@@ -720,6 +860,10 @@
     }
     if (id === 'wishes') {
       const n = S.wishes.filter(w => w.status === 'want').length;
+      return n ? String(n) : '';
+    }
+    if (id === 'routines') {
+      const n = routinesDue(0).length;
       return n ? String(n) : '';
     }
     return '';
@@ -832,6 +976,7 @@
       case 'tasks': return viewTasks();
       case 'goals': return viewGoals();
       case 'projects': return viewProjects();
+      case 'routines': return viewRoutines();
       case 'habits': return viewHabits();
       case 'wishes': return viewWishes();
       case 'trivia': return viewTrivia();
@@ -958,6 +1103,37 @@
       <div class="habit-grid">`;
     builds.forEach(hb => { h += habitChip(hb, k); });
     h += `</div></section></div><div class="col">`;
+
+    // 日常记录：近一周该做的
+    if (S.routines.length) {
+      const pend = routinesDue(7);
+      h += `<section class="card">
+        <div class="card-head">
+          <span class="card-title">日常该做了</span>
+          <span class="card-count">${pend.length ? pend.length + ' 项' : '都做过了'}</span>
+        </div>`;
+      if (!pend.length) {
+        h += `<div class="card-empty">近一周没有到期的日常事项。</div>`;
+      } else {
+        pend.slice(0, 3).forEach(r => {
+          const d = routineDue(r);
+          const last = routineLast(r);
+          const when = d.state === 'over' ? `逾期 ${-d.days} 天` : d.state === 'today' ? '就是今天' : `${d.days} 天后`;
+          h += `<div class="routine-mini ${d.state}">
+            <span class="rm-ico">${icon(r.icon || 'cycle', 13)}</span>
+            <div class="rm-main" data-act="open-routine" data-id="${r.id}">
+              <div class="rm-name">${esc(r.name)}</div>
+              <div class="rm-meta">${when}${last ? ' · 上次 ' + fmtShort(last.date) : ''}</div>
+            </div>
+            <button class="btn sm" data-act="routine-log" data-id="${r.id}">记一次</button>
+          </div>`;
+        });
+        if (pend.length > 3) {
+          h += `<div class="note-more"><button class="link-btn" data-act="goto-routines">还有 ${pend.length - 3} 项，去日常记录查看 →</button></div>`;
+        }
+      }
+      h += `</section>`;
+    }
 
     // 戒除
     h += `<section class="card">
@@ -1411,6 +1587,82 @@
     return h;
   }
 
+  // ---------- 日常记录 ----------
+  // 到期状态 → 徽标文案；d.state: over / today / soon / later / none
+  function nextBadge(d, hasLog) {
+    if (d.state === 'over') return `<span class="nbadge over">${icon('clock', 11)}逾期 ${-d.days} 天</span>`;
+    if (d.state === 'today') return `<span class="nbadge today">今天该做</span>`;
+    if (d.state === 'soon') return `<span class="nbadge soon">${d.days} 天后</span>`;
+    if (d.state === 'later') return `<span class="nbadge later">${fmtMD(d.next)}</span>`;
+    return `<span class="nbadge none">${hasLog ? '没定下次' : '还没做过'}</span>`;
+  }
+
+  function routineRow(r) {
+    const logs = routineLogs(r);
+    const last = logs[0] || null;
+    const d = routineDue(r);
+    const gap = routineAvgGap(r);
+    const urgent = d.state === 'over' || d.state === 'today';
+    const sub = last
+      ? `上次 ${fmtMD(last.date)} · ${relLabel(last.date)}${gap ? ' · 平均 ' + gap + ' 天一次' : ''}`
+      : '还没记录过，做完点右边「记一次」';
+    return `<div class="rrow ${d.state}">
+      <div class="rrow-main" data-act="open-routine" data-id="${r.id}">
+        <span class="r-ico">${icon(r.icon || 'cycle', 14)}</span>
+        <div style="min-width:0">
+          <h3>${esc(r.name)}</h3>
+          <p>${sub}</p>
+        </div>
+      </div>
+      <div class="rrow-next">${nextBadge(d, !!last)}</div>
+      <div class="rrow-count"><b>${logs.length}</b>次</div>
+      <div class="rrow-act">
+        <button class="btn sm ${urgent ? 'btn-amber' : ''}" data-act="routine-log" data-id="${r.id}">记一次</button>
+      </div>
+      <div class="rrow-x"><button class="row-x" data-act="routine-del" data-id="${r.id}" title="删除这个事项">${icon('trash', 26)}</button></div>
+    </div>`;
+  }
+
+  function viewRoutines() {
+    const tab = S.ui.routineTab || 'all';
+    const all = routineSorted();
+    const due = all.filter(r => { const d = routineDue(r); return d.next && d.days <= 0; });
+    const logs = sum(all.map(r => (r.logs || []).length));
+    const list = tab === 'due' ? due : all;
+
+    let h = `<div class="page-head">
+      <div>
+        <h1 class="page-title">日常记录</h1>
+        <div class="page-sub">
+          <span>${all.length} 个事项</span><span class="dot-sep"></span>
+          <span>${logs} 条记录</span><span class="dot-sep"></span>
+          <span>${due.length} 项该做了</span>
+        </div>
+      </div>
+      <div class="page-actions"><button class="btn btn-amber" data-act="routine-new">${icon('plus', 14)} 新事项</button></div>
+    </div>`;
+
+    h += `<div class="habit-page-head">
+      <div class="seg">
+        <button class="${tab === 'all' ? 'on' : ''}" data-act="routine-tab" data-tab="all">全部 ${all.length}</button>
+        <button class="${tab === 'due' ? 'on' : ''}" data-act="routine-tab" data-tab="due">该做了 ${due.length}</button>
+      </div>
+      <span class="muted" style="font-size:11px">重复做的事，每做一次就「记一次」 · 点名称看全部记录</span>
+    </div>`;
+
+    if (!list.length) {
+      h += `<div class="card card-empty" style="padding:44px">
+        ${tab === 'due' ? '都做过了，没有到期的事项。' : '还没有日常事项。<br>洗浴巾、换床单、给猫剪指甲……这类隔一阵就要做一次的事都适合放在这里。'}
+      </div>`;
+      return h;
+    }
+
+    h += `<div class="routine-list">`;
+    list.forEach(r => { h += routineRow(r); });
+    h += `</div>`;
+    return h;
+  }
+
   // ---------- 成就 ----------
   function viewAchievements() {
     const year = TODAY_K.slice(0, 4);
@@ -1625,6 +1877,72 @@
     openDrawer(h);
   }
 
+  function drawerOpen() {
+    return document.getElementById('drawer').classList.contains('open');
+  }
+
+  function drawerRoutine(id) {
+    const r = routineById(id);
+    if (!r) return;
+    const logs = routineLogs(r);
+    const last = logs[0] || null;
+    const d = routineDue(r);
+    const gap = routineAvgGap(r);
+    const urgent = d.state === 'over' || d.state === 'today';
+
+    let nextLine;
+    if (d.state === 'over') nextLine = `<span style="color:var(--red-text)">预计下次 ${fmtMD(d.next)}，已经逾期 ${-d.days} 天</span>`;
+    else if (d.state === 'today') nextLine = `<span style="color:var(--amber-2)">预计下次就是今天</span>`;
+    else if (d.next) nextLine = `预计下次 ${fmtMDW(d.next)} · 还有 ${d.days} 天`;
+    else nextLine = '还没定下次，做完时可以在弹窗里填一个。';
+
+    let h = `<div class="drawer-head">
+      <div class="dh-main">
+        <div class="dh-kicker">日常记录${r.cycleDays ? ' · 约 ' + r.cycleDays + ' 天一次' : ' · 不设周期'}</div>
+        <h2>${esc(r.name)}</h2>
+      </div>
+      <button class="icon-btn" data-act="drawer-close">${icon('x', 16)}</button>
+    </div><div class="drawer-body">`;
+
+    h += `<div class="flex" style="align-items:flex-end;gap:8px;margin-bottom:2px">
+      <span class="mono" style="font-size:40px;font-weight:600;letter-spacing:-.04em;line-height:1;color:#F0C88C">${last ? diffDays(TODAY_K, last.date) : '—'}</span>
+      <span class="muted" style="font-size:12px;padding-bottom:5px">${last ? '天前做过' : '还没记录'}</span>
+    </div>
+    <div class="muted" style="font-size:11px;margin-bottom:16px">${nextLine}</div>`;
+
+    h += `<div class="drawer-section">
+      <div class="kv"><span class="k">累计次数</span><span class="v">${logs.length} 次</span></div>
+      <div class="kv"><span class="k">平均间隔</span><span class="v">${gap ? gap + ' 天' : '还看不出来'}</span></div>
+      <div class="kv"><span class="k">上次</span><span class="v">${last ? fmtFull(last.date) : '—'}</span></div>
+      <div class="kv" style="border:0"><span class="k">预计下次</span><span class="v">${d.next ? fmtFull(d.next) : '没填'}</span></div>
+    </div>`;
+
+    h += `<div class="drawer-section" style="display:flex;gap:8px">
+      <button class="btn ${urgent ? 'btn-amber' : ''}" data-act="routine-log" data-id="${r.id}">${icon('plus', 14)} 记一次</button>
+      <button class="btn btn-danger" data-act="routine-del" data-id="${r.id}">${icon('trash', 14)} 删除这个事项</button>
+    </div>`;
+
+    if (r.note) h += `<div class="drawer-section"><h4>备注</h4><div class="muted" style="font-size:12px;line-height:1.7">${esc(r.note)}</div></div>`;
+
+    h += `<div class="drawer-section"><h4>全部记录 · ${logs.length}</h4>`;
+    if (!logs.length) {
+      h += `<div class="muted" style="font-size:11.5px">还没有记录。点上面「记一次」，写下哪天做的。</div>`;
+    } else {
+      logs.forEach(l => {
+        h += `<div class="log-row">
+          <div class="log-main">
+            <div class="log-date">${fmtMDW(l.date)}<span>${relLabel(l.date)}</span></div>
+            ${l.note ? `<div class="log-note">${esc(l.note)}</div>` : ''}
+            ${l.next ? `<div class="log-next">当时说下次 ${fmtMD(l.next)}</div>` : ''}
+          </div>
+          <button class="row-x" data-act="routine-log-del" data-id="${l.id}" data-rid="${r.id}" title="删除这条记录">${icon('trash', 26)}</button>
+        </div>`;
+      });
+    }
+    h += `</div></div>`;
+    openDrawer(h);
+  }
+
   // ---------- 弹层 ----------
   function openModal(html) {
     const layer = document.getElementById('modalLayer');
@@ -1758,6 +2076,41 @@
        <button class="btn btn-amber" data-act="wish-create">加入清单</button>`));
   }
 
+  function openNewRoutine() {
+    openModal(modalShell('新日常事项', '隔一阵就要做一次的事，比如洗浴巾、换床单、给猫剪指甲。',
+      `<div class="field"><label>事项名称</label><input class="input" id="nrName" placeholder="例：洗浴巾"></div>
+       <div class="field"><label>大概多久一次（可选，填了会自动推算下次）</label><input class="input" id="nrCycle" type="number" min="1" max="365" placeholder="例：14"></div>
+       <div class="field"><label>备注（可选）</label><textarea class="input" id="nrNote" rows="2" placeholder="例：两条轮换，攒够一周一起洗"></textarea></div>`,
+      `<button class="btn btn-ghost" data-act="m-close">取消</button>
+       <button class="btn btn-amber" data-act="routine-create">创建</button>`));
+  }
+
+  // 记一次：哪天做的必填，预计下次可选
+  function openRoutineLog(id) {
+    const r = routineById(id);
+    if (!r) return;
+    const last = routineLast(r);
+    const suggest = last
+      ? (r.cycleDays ? iso(shift(parse(last.date), Number(r.cycleDays))) : '')
+      : '';
+    // 建议值不会早于今天，免得一记完就是逾期
+    const fixed = suggest && suggest < TODAY_K ? TODAY_K : suggest;
+    const quick = [7, 14, 30].map(n => `<button class="btn sm" data-act="routine-quick-next" data-days="${n}">+${n} 天</button>`).join('');
+    const cycleBtn = r.cycleDays ? `<button class="btn sm" data-act="routine-quick-next" data-days="${r.cycleDays}">按周期 ${r.cycleDays} 天</button>` : '';
+
+    openModal(modalShell(`记一次 · ${esc(r.name)}`, '哪天做的必填；预计下次可以留空，之后再补。',
+      `<div class="log-target">${icon(r.icon || 'cycle', 15)}<b>${esc(r.name)}</b><span>${last ? '上次 ' + fmtMD(last.date) : '第一次记录'}</span></div>
+       <div class="field"><label>哪天做的（必填）</label><input class="input" id="rlDate" type="date" value="${TODAY_K}" max="${TODAY_K}"></div>
+       <div class="field">
+         <label>预计下次什么时候（可选）</label>
+         <input class="input" id="rlNext" type="date" value="${fixed}">
+         <div class="quick-row">${quick}${cycleBtn}<button class="btn sm btn-ghost" data-act="routine-quick-next" data-days="0">清空</button></div>
+       </div>
+       <div class="field"><label>想说的话（可选）</label><input class="input" id="rlNote" placeholder="例：顺便把浴袍也洗了"></div>`,
+      `<button class="btn btn-ghost" data-act="m-close">取消</button>
+       <button class="btn btn-amber" data-act="routine-log-save" data-id="${r.id}">记下来</button>`));
+  }
+
   function openNewAch() {
     openModal(modalShell('记录一件做成的事', '不用是大事。',
       `<div class="field"><label>做成了什么</label><input class="input" id="naTitle" placeholder="例：第一次一个人去看电影"></div>
@@ -1820,7 +2173,8 @@
       { label: '快速记录', icon: 'pen', hint: 'Ctrl Shift Space', run: openCapture },
       { label: '今日小结', icon: 'check', hint: '', run: openSummary },
       { label: '新建任务', icon: 'plus', hint: '', run: () => { go('tasks'); setTimeout(() => { const el = document.getElementById('taskAdd'); if (el) el.focus(); }, 40); } },
-      { label: '新建习惯', icon: 'repeat', hint: '', run: openNewHabit }
+      { label: '新建习惯', icon: 'repeat', hint: '', run: openNewHabit },
+      { label: '新建日常事项', icon: 'cycle', hint: '', run: openNewRoutine }
     ]);
     palSel = 0;
     const layer = document.getElementById('modalLayer');
@@ -1847,6 +2201,7 @@
       { label: '今日小结', icon: 'check', hint: '', run: openSummary },
       { label: '新建任务', icon: 'plus', hint: '', run: () => { go('tasks'); setTimeout(() => { const el = document.getElementById('taskAdd'); if (el) el.focus(); }, 40); } },
       { label: '新建习惯', icon: 'repeat', hint: '', run: openNewHabit },
+      { label: '新建日常事项', icon: 'cycle', hint: '', run: openNewRoutine },
       { label: '回收站', icon: 'trash', hint: '恢复删除', run: openTrash }
     ]);
   };
@@ -2010,6 +2365,7 @@
       }
       case 'note-del': delTrivia(id); break;
       case 'goto-notes': go('trivia'); break;
+      case 'goto-routines': go('routines'); break;
       case 'clean-done': {
         const list = S.tasks.filter(t => t.done);
         if (!list.length) break;
@@ -2180,6 +2536,79 @@
           save(); render(false);
           toast(`已排进今天：<b>${esc(p.next)}</b>`);
         }
+        break;
+      }
+
+      // ---- 日常记录 ----
+      case 'routine-tab':
+        S.ui.routineTab = el.dataset.tab; save(); render(false); break;
+      case 'routine-new': openNewRoutine(); break;
+      case 'open-routine': drawerRoutine(id); break;
+      case 'routine-log': openRoutineLog(id); break;
+      case 'routine-del': {
+        const r = routineById(id);
+        if (!r) break;
+        const n = (r.logs || []).length;
+        askConfirm({
+          title: `删除日常事项「${r.name}」？`,
+          detail: n
+            ? `已经攒了 ${n} 条记录，会一起删除，删掉后可以在回收站恢复。`
+            : '删掉后可以在回收站恢复。',
+          okText: '删除事项',
+          onOk: () => delRoutine(id)
+        });
+        break;
+      }
+      case 'routine-log-del': {
+        const rid = el.dataset.rid;
+        delRoutineLog(rid, id);
+        break;
+      }
+      case 'routine-quick-next': {
+        const days = Number(el.dataset.days);
+        const base = document.getElementById('rlDate');
+        const next = document.getElementById('rlNext');
+        if (!next) break;
+        if (!days) { next.value = ''; break; }
+        const from = base && base.value ? base.value : TODAY_K;
+        next.value = iso(shift(parse(from), days));
+        break;
+      }
+      case 'routine-create': {
+        const name = (document.getElementById('nrName') || {}).value || '';
+        if (!name.trim()) break;
+        const cycle = Number((document.getElementById('nrCycle') || {}).value || 0);
+        const note = (document.getElementById('nrNote') || {}).value || '';
+        S.routines.push({
+          id: uid('rt'), name: name.trim(), icon: 'cycle',
+          cycleDays: cycle > 0 ? clamp(Math.round(cycle), 1, 365) : null,
+          note: note.trim(), logs: []
+        });
+        save(); closeModal(); render(false);
+        toast(`已创建日常事项 <b>${esc(name.trim())}</b>`, '记一次', () => {
+          const r = S.routines[S.routines.length - 1];
+          if (r) openRoutineLog(r.id);
+        });
+        break;
+      }
+      case 'routine-log-save': {
+        const r = routineById(id);
+        if (!r) break;
+        const date = (document.getElementById('rlDate') || {}).value || '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast('先选一个「哪天做的」'); break; }
+        const nextRaw = (document.getElementById('rlNext') || {}).value || '';
+        const next = /^\d{4}-\d{2}-\d{2}$/.test(nextRaw) ? nextRaw : null;
+        const note = ((document.getElementById('rlNote') || {}).value || '').trim();
+        const exist = (r.logs || []).find(l => l.date === date);
+        if (exist) {
+          exist.next = next;
+          if (note) exist.note = note;
+        } else {
+          r.logs.push({ id: uid('rl'), date, next, note });
+        }
+        save(); closeModal(); render(false);
+        if (drawerOpen()) drawerRoutine(r.id);
+        toast(`${exist ? '已更新' : '已记下'} <b>${esc(r.name)}</b> · ${fmtMD(date)}${next ? `，下次 ${fmtMD(next)}` : ''}`);
         break;
       }
 

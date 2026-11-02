@@ -860,12 +860,14 @@ svg{display:block}
 .card-x svg{width:26px;height:26px}
 .task:hover .row-x,.task-row:hover .row-x,.note:hover .row-x,.trivia-row:hover .row-x,
 .hrow:hover .row-x,.sub-row:hover .row-x,.tree-row:hover .row-x,.tl-item:hover .row-x,
+.rrow:hover .row-x,.log-row:hover .row-x,
 .pcard:hover .card-x,.qcard:hover .card-x,.wish-card:hover .card-x,
 /* 卡片被键盘选中（Tab 到卡片里的任何可聚焦元素）时也显示 */
 .pcard:focus-within .card-x,.qcard:focus-within .card-x,.wish-card:focus-within .card-x,
 .task:focus-within .row-x,.task-row:focus-within .row-x,.note:focus-within .row-x,
 .trivia-row:focus-within .row-x,.hrow:focus-within .row-x,.sub-row:focus-within .row-x,
 .tree-row:focus-within .row-x,.tl-item:focus-within .row-x,
+.rrow:focus-within .row-x,.log-row:focus-within .row-x,
 .row-x:focus-visible,.card-x:focus-visible{
   opacity:1;pointer-events:auto;
 }
@@ -984,4 +986,82 @@ svg{display:block}
 .step-btn:hover{background:hsl(var(--hue) 80% 57% / .12);border-color:hsl(var(--hue) 80% 57% / .3);color:var(--amber-2)}
 .task-row.done .check svg,.check.on svg{opacity:1;transform:scale(1)}
 .trivia-day.sel-day{box-shadow:inset 0 0 0 1px hsl(var(--hue) 80% 57% / .16)}
+
+/* ============ 日常记录 ============ */
+.routine-list{display:flex;flex-direction:column;gap:8px}
+.rrow{
+  display:grid;grid-template-columns:minmax(0,1fr) 138px 66px 92px 36px;
+  align-items:center;gap:14px;padding:11px 14px;
+  border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  transition:border-color .15s;
+}
+.rrow:hover{border-color:var(--line-strong)}
+.rrow-main{display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer}
+.rrow-main .r-ico{
+  width:28px;height:28px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;
+  background:hsl(var(--hue) 80% 57% / .08);color:var(--amber-2);
+}
+.rrow-main .r-ico svg{width:15px;height:15px}
+.rrow-main h3{font-size:13.5px;font-weight:500;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rrow-main p{font-size:10.5px;color:var(--text-3);margin:1px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rrow-next{display:flex;justify-content:flex-end}
+
+/* 到期状态徽标 */
+.nbadge{
+  display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:7px;
+  font-size:11px;line-height:1.45;white-space:nowrap;border:1px solid transparent;
+  font-variant-numeric:tabular-nums;
+}
+.nbadge svg{width:11px;height:11px}
+.nbadge.over{color:var(--red-text);background:hsl(var(--red-hue) 64% 65% / .1);border-color:hsl(var(--red-hue) 64% 65% / .28)}
+.nbadge.today{color:var(--amber-ink);background:var(--amber);border-color:transparent;font-weight:600}
+.nbadge.soon{color:var(--amber-2);background:var(--amber-dim);border-color:hsl(var(--hue) 80% 57% / .28)}
+.nbadge.later{color:var(--text-3);background:var(--fill-2);border-color:var(--line)}
+.nbadge.none{color:var(--text-3);background:transparent;border-color:var(--dash)}
+
+.rrow-count{font-size:11px;color:var(--text-3);text-align:right;font-variant-numeric:tabular-nums}
+.rrow-count b{display:block;font-size:15px;color:var(--text);font-weight:600;line-height:1.2}
+.rrow-act{display:flex;justify-content:flex-end}
+.rrow-x{display:flex;justify-content:flex-end;margin-left:-8px;position:relative;z-index:1}
+/* 日常记录：删除入口常驻淡显，鼠标移上去变实，不用靠猜 */
+.rrow .row-x,.log-row .row-x{opacity:.34;pointer-events:auto}
+.rrow:hover .row-x,.rrow:focus-within .row-x,
+.log-row:hover .row-x,.log-row:focus-within .row-x{opacity:1}
+
+/* 抽屉里的记录列表 */
+.log-row{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:9px}
+.log-row:hover{background:var(--fill)}
+.log-main{flex:1;min-width:0}
+.log-date{font-size:12.5px;color:var(--text-2);display:flex;align-items:baseline;gap:7px}
+.log-date span{font-size:10.5px;color:var(--text-3)}
+.log-note{font-size:11.5px;color:var(--text-2);line-height:1.6;margin-top:3px;word-break:break-word}
+.log-next{font-size:10.5px;color:var(--text-3);margin-top:2px}
+.log-row .row-x{width:32px;height:32px;flex:0 0 auto;margin-left:0}
+.log-row .row-x svg{width:22px;height:22px}
+
+/* 记一次弹窗 */
+.log-target{
+  display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:10px;
+  background:var(--fill);border:1px solid var(--line);margin-bottom:14px;
+  font-size:12.5px;color:var(--text-2);
+}
+.log-target svg{width:15px;height:15px;color:var(--amber-2);flex:0 0 auto}
+.log-target b{color:var(--text);font-weight:500}
+.log-target span{margin-left:auto;font-size:10.5px;color:var(--text-3)}
+.quick-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+
+/* 今日总览里的迷你行 */
+.routine-mini{display:flex;align-items:center;gap:9px;padding:6px 7px;border-radius:9px}
+.routine-mini:hover{background:var(--hover)}
+.routine-mini .rm-ico{
+  width:24px;height:24px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto;
+  background:hsl(var(--hue) 80% 57% / .08);color:var(--amber-2);
+}
+.routine-mini .rm-ico svg{width:13px;height:13px}
+.routine-mini.over .rm-ico{background:hsl(var(--red-hue) 64% 65% / .1);color:var(--red-text)}
+.rm-main{flex:1;min-width:0;cursor:pointer}
+.rm-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-meta{font-size:10.5px;color:var(--text-3);margin-top:1px;font-variant-numeric:tabular-nums}
+.routine-mini.over .rm-meta{color:var(--red-text)}
+
 .no-anim *,.no-anim *::before,.no-anim *::after{transition:none!important;animation:none!important}
