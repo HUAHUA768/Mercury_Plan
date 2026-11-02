@@ -3,7 +3,10 @@
   "private": true,
   "scripts": {
     "dev": "tauri dev",
-    "build": "tauri build"
+    "build": "node scripts/bump.js && tauri build",
+    "build:keep": "tauri build",
+    "bump:minor": "node scripts/bump.js minor",
+    "bump:major": "node scripts/bump.js major"
   },
   "engines": {
     "node": ">=20"
