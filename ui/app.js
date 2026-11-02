@@ -1317,8 +1317,9 @@
         <div class="kv"><span class="k">所属目标</span><span class="v">${path[0] ? esc(path[0].title) : '—'}</span></div>
         <div class="kv"><span class="k">关联项目</span><span class="v">${path.some(x => x.id === 'g2') ? '水星计划 · Windows 版' : '—'}</span></div>`;
 
-      h += `<div class="mt14" style="display:flex;gap:8px">
-        <button class="btn btn-amber" data-act="goal-schedule" data-id="${root.id}">${icon('cal', 14)} 排进今天</button>
+      h += `<div class="mt14" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-amber" data-act="goal-add" data-id="${root.id}">${icon('plus', 14)} 添加子项</button>
+        <button class="btn" data-act="goal-schedule" data-id="${root.id}">${icon('cal', 14)} 排进今天</button>
         <button class="btn" data-act="goal-done" data-id="${root.id}">${root.status === 'done' ? '重新打开' : '标记完成'}</button>
         <button class="btn btn-danger" data-act="goal-del" data-id="${root.id}">${icon('trash', 14)} 删除</button>
       </div>`;
@@ -1334,7 +1335,15 @@
             <button class="row-x" data-act="goal-del" data-id="${c.id}" data-parent="${root.id}" title="删除这个子项">${icon('trash', 26)}</button>
           </div>`;
         });
-        h += `</div></div>`;
+        h += `</div>
+          <button class="btn sm" style="margin-top:8px" data-act="goal-add" data-id="${root.id}">${icon('plus', 12)} 再拆一层</button>
+        </div>`;
+      } else {
+        h += `<div class="drawer-section mt14" style="margin-bottom:0">
+          <h4>子项</h4>
+          <div class="muted" style="font-size:11px;margin:6px 0 10px">还没拆。把它拆成几个能直接做的子目标或行动。</div>
+          <button class="btn sm btn-amber" data-act="goal-add" data-id="${root.id}">${icon('plus', 12)} 添加子项</button>
+        </div>`;
       }
     }
     h += `</section></div>`;
@@ -2127,6 +2136,16 @@
        <button class="btn btn-amber" data-act="goal-create">创建</button>`));
   }
 
+  function openAddSub(pid) {
+    const parent = goalById(pid);
+    if (!parent) return;
+    openModal(modalShell('添加子项', `挂在「${parent.title}」下面，拆到能直接做为止。`,
+      `<div class="field"><label>子项</label><input class="input" id="nsTitle" placeholder="例：读完《设计中的设计》"></div>`,
+      `<button class="btn btn-ghost" data-act="m-close">取消</button>
+       <button class="btn btn-amber" data-act="sub-create" data-id="${pid}">创建</button>`));
+    setTimeout(() => { const el = document.getElementById('nsTitle'); if (el) el.focus(); }, 40);
+  }
+
   function openNewProject() {
     openModal(modalShell('新项目', '有交付物、有结束点的一件事。',
       `<div class="field"><label>项目名</label><input class="input" id="npName" placeholder="例：书房改造"></div>
@@ -2496,6 +2515,19 @@
       case 'goal-schedule': scheduleGoal(id); break;
       case 'goal-done': completeGoal(id); break;
       case 'goal-new': openNewGoal(); break;
+      case 'goal-add': openAddSub(id); break;
+      case 'sub-create': {
+        const title = (document.getElementById('nsTitle') || {}).value || '';
+        if (!title.trim()) break;
+        const pid = id;
+        const parent = goalById(pid);
+        if (!parent) break;
+        S.goals.push({ id: uid('g'), parentId: pid, title: title.trim(), type: 'sub', status: 'todo', note: '' });
+        S.ui.expanded[pid] = true;
+        S.ui.goalId = pid;
+        save(); closeModal(); render(false); toast('子项已添加，继续拆。');
+        break;
+      }
       case 'goal-del': {
         const g = goalById(id);
         if (!g) break;
