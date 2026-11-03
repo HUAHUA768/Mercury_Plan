@@ -644,6 +644,21 @@
     });
   }
 
+  function openCloudHelp() {
+    openModal(modalShell('获取坚果云应用密码', '应用密码不是登录密码，是专门给第三方应用用的一串独立密码。',
+      `<ol class="help-steps">
+        <li>用浏览器打开 <b>www.jianguoyun.com</b>，登录你的坚果云账号</li>
+        <li>点右上角的<b>账号名</b>，选择「<b>账户信息</b>」</li>
+        <li>切换到「<b>安全选项</b>」标签页</li>
+        <li>找到「<b>第三方应用管理</b>」，点「<b>添加应用密码</b>」</li>
+        <li>名称随便填一个（比如「水星计划」），点「<b>生成密码</b>」</li>
+        <li>复制生成的那串随机密码（<b>只显示这一次</b>，记得复制）</li>
+        <li>回到本应用「设置 → 坚果云云备份」：账号填注册邮箱，密码粘贴刚复制的那串，点「测试连接」</li>
+      </ol>
+      <div class="muted backup-hint">提示：应用密码可以随时在「安全选项」里删除重建，不影响坚果云登录密码。如果忘了应用密码，删掉重新生成一个即可。</div>`,
+      '<button class="btn btn-amber" data-act="m-close">知道了</button>'));
+  }
+
   // ---------- 主题 ----------
   const THEME_KEY = 'mercury.theme';
   const THEMES = [
@@ -2595,6 +2610,10 @@
          <button class="btn" id="jdList" data-act="jd-list">${icon('db', 14)}云端记录</button>
        </div>
        <div class="muted backup-hint">首次使用：登录坚果云网页版 → 账户信息 → 安全选项 → 添加应用密码。备份存放在坚果云的 /MercuryPlan/ 文件夹，账号和应用密码只保存在本机。</div>
+       <button class="set-row" data-act="jd-help">
+         <span class="set-row-main">${icon('restore', 15)}<span>如何获取坚果云应用密码？</span></span>
+         <span class="set-row-side">查看教程${icon('chevR', 14)}</span>
+       </button>
        <div class="muted backup-hint" id="jdLast">上次云备份：${fmtCloudTime(jd.lastBackupAt)}</div>
        <button class="set-row" data-act="trash-open">
          <span class="set-row-main">${icon('trash', 15)}<span>回收站</span></span>
@@ -2801,6 +2820,7 @@
       case 'jd-list': cloudList(); break;
       case 'jd-restore': cloudRestore(id); break;
       case 'jd-del': cloudDelete(id); break;
+      case 'jd-help': openCloudHelp(); break;
 
       case 'toggle-task': toggleTask(id); break;
       case 'task-del': {

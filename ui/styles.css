@@ -944,6 +944,8 @@ svg{display:block}
 .cloud-name span{font-size:10.5px;color:var(--text-3)}
 .cloud-ops{display:flex;gap:6px;flex-shrink:0}
 .cloud-ops .btn{padding:5px 10px;font-size:11px}
+.help-steps{margin:0 0 6px;padding-left:22px;font-size:12.5px;line-height:1.9}
+.help-steps b{font-weight:600}
 .export-path{
   padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:var(--fill);
   color:var(--text);font-size:12px;line-height:1.6;word-break:break-all;user-select:text;
