@@ -455,6 +455,195 @@
     }
   }
 
+  // ---------- 坚果云云备份（WebDAV） ----------
+  const CLOUD_SERVER = 'https://dav.jianguoyun.com/dav/';
+  const CLOUD_FOLDER = 'MercuryPlan';
+  const CLOUD_CFG_KEY = 'mercury.webdav';
+
+  function cloudCfg() {
+    try { return JSON.parse(localStorage.getItem(CLOUD_CFG_KEY)) || {}; } catch (e) { return {}; }
+  }
+
+  function saveCloudCfg(cfg) {
+    try { localStorage.setItem(CLOUD_CFG_KEY, JSON.stringify(cfg)); } catch (e) { /* 忽略 */ }
+  }
+
+  function tauriInvoke(cmd, args) {
+    const invoke = window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke;
+    if (!invoke) return Promise.reject(new Error('桌面功能不可用，请重新构建应用'));
+    return invoke(cmd, args);
+  }
+
+  function readCloudInputs() {
+    const cfg = cloudCfg();
+    const uEl = document.getElementById('jdUser');
+    const pEl = document.getElementById('jdPass');
+    if (uEl) cfg.user = uEl.value.trim();
+    if (pEl && pEl.value) cfg.pass = pEl.value; // 留空表示沿用已保存的密码
+    if (!cfg.user) throw new Error('请先填写坚果云账号（注册邮箱）');
+    if (!cfg.pass) throw new Error('请先填写坚果云应用密码（在坚果云「安全选项」里生成）');
+    saveCloudCfg(cfg);
+    return cfg;
+  }
+
+  function cloudBusy(btnId, busy, text) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = busy;
+    if (busy) {
+      btn.dataset.orig = btn.innerHTML;
+      btn.innerHTML = esc(text || '处理中…');
+    } else if (btn.dataset.orig) {
+      btn.innerHTML = btn.dataset.orig;
+    }
+  }
+
+  function cloudFail(e, prefix) {
+    // Tauri 的 invoke 失败时把 Rust 的 Err(String) 原样抛过来，可能是字符串
+    const msg = typeof e === 'string' ? e : (e && e.message) || '未知错误';
+    toast(`${prefix}：${esc(msg)}`);
+  }
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  function fmtCloudTime(iso) {
+    if (!iso) return '从未备份';
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  function fmtCloudSize(n) {
+    if (!n) return '';
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+    return (n / 1048576).toFixed(2) + ' MB';
+  }
+
+  async function cloudTest() {
+    let cfg;
+    try { cfg = readCloudInputs(); } catch (e) { toast(esc(e.message)); return; }
+    cloudBusy('jdTest', true, '连接中…');
+    try {
+      await tauriInvoke('webdav_test', { server: CLOUD_SERVER, username: cfg.user, password: cfg.pass, folder: CLOUD_FOLDER });
+      toast('坚果云连接成功');
+    } catch (e) {
+      cloudFail(e, '连接失败');
+    } finally {
+      cloudBusy('jdTest', false);
+    }
+  }
+
+  async function cloudBackup() {
+    let cfg;
+    try { cfg = readCloudInputs(); } catch (e) { toast(esc(e.message)); return; }
+    cloudBusy('jdBackup', true, '上传中…');
+    try {
+      const now = new Date();
+      const name = `mercury-plan-backup-${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}.json`;
+      const content = JSON.stringify(createBackup(), null, 2);
+      const base = { server: CLOUD_SERVER, username: cfg.user, password: cfg.pass, folder: CLOUD_FOLDER };
+      await tauriInvoke('webdav_upload', { ...base, filename: name, content });
+      try {
+        await tauriInvoke('webdav_upload', { ...base, filename: 'latest.json', content });
+      } catch (e) { /* latest.json 只是固定入口，失败不影响本次备份 */ }
+      cfg.lastBackupAt = now.toISOString();
+      saveCloudCfg(cfg);
+      const el = document.getElementById('jdLast');
+      if (el) el.textContent = `上次云备份：${fmtCloudTime(cfg.lastBackupAt)}`;
+      toast(`已备份到坚果云 <b>${esc(name.replace('mercury-plan-backup-', '').replace('.json', ''))}</b>`);
+    } catch (e) {
+      cloudFail(e, '云备份失败');
+    } finally {
+      cloudBusy('jdBackup', false);
+    }
+  }
+
+  function cloudNameToTime(name) {
+    const m = name.match(/^mercury-plan-backup-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\.json$/);
+    if (!m) return '';
+    return `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}:${m[6]}`;
+  }
+
+  async function cloudList() {
+    let cfg;
+    try { cfg = readCloudInputs(); } catch (e) { toast(esc(e.message)); return; }
+    cloudBusy('jdList', true, '读取中…');
+    let files;
+    try {
+      files = await tauriInvoke('webdav_list', { server: CLOUD_SERVER, username: cfg.user, password: cfg.pass, folder: CLOUD_FOLDER });
+    } catch (e) {
+      cloudBusy('jdList', false);
+      cloudFail(e, '读取云端备份失败');
+      return;
+    }
+    cloudBusy('jdList', false);
+    files = (files || []).sort((a, b) => (a.name < b.name ? 1 : -1));
+    const rows = files.map(f => {
+      const t = cloudNameToTime(f.name);
+      const label = t || (f.name === 'latest.json' ? '最新一份（固定入口）' : esc(f.name));
+      return `<div class="cloud-row">
+        <span class="cloud-name"><b>${label}</b><span>${esc(fmtCloudSize(f.size))}</span></span>
+        <span class="cloud-ops">
+          <button class="btn" data-act="jd-restore" data-id="${esc(f.name)}">恢复</button>
+          <button class="btn" data-act="jd-del" data-id="${esc(f.name)}">删除</button>
+        </span>
+      </div>`;
+    }).join('');
+    openModal(modalShell('坚果云云端备份', `/${CLOUD_FOLDER} · 共 ${files.length} 份备份`,
+      rows || '<div class="muted backup-hint">云端还没有备份，回到设置点「备份到坚果云」创建第一份。</div>',
+      '<button class="btn" data-act="settings">返回设置</button><button class="btn btn-amber" data-act="m-close">关闭</button>'));
+  }
+
+  async function cloudRestore(file) {
+    const cfg = cloudCfg();
+    try {
+      const raw = await tauriInvoke('webdav_download', { server: CLOUD_SERVER, username: cfg.user, password: cfg.pass, folder: CLOUD_FOLDER, filename: file });
+      const payload = JSON.parse(raw);
+      // 老备份补齐字段，和本地导入保持一致
+      if (payload.data && !Array.isArray(payload.data.routines)) payload.data.routines = [];
+      if (payload.data && !Array.isArray(payload.data.hobbies)) payload.data.hobbies = [];
+      validateBackup(payload);
+      const imported = clone(payload.data);
+      imported.routines.forEach(r => { if (!Array.isArray(r.logs)) r.logs = []; });
+      imported.hobbies.forEach(h => { if (!Array.isArray(h.logs)) h.logs = []; });
+      askConfirm({
+        title: '从坚果云恢复备份？',
+        detail: `将用云端备份（${fmtCloudTime(payload.exportedAt)}）覆盖当前全部数据（${imported.tasks.length} 条待办、${imported.projects.length} 个项目）。此操作不可自动撤销。`,
+        okText: '覆盖并恢复',
+        onOk: () => {
+          S = imported;
+          S.meta = { ...(S.meta || {}), demo: false, importedAt: new Date().toISOString() };
+          if (!Array.isArray(S.trash)) S.trash = [];
+          if (payload.theme) applyTheme(payload.theme);
+          save();
+          closeModal();
+          render(true);
+          toast('云端备份已恢复');
+        }
+      });
+    } catch (e) {
+      cloudFail(e, '恢复失败');
+    }
+  }
+
+  function cloudDelete(file) {
+    const cfg = cloudCfg();
+    askConfirm({
+      title: `删除云端备份「${file}」？`,
+      detail: '只删除坚果云上的这份备份文件，不影响本机数据。',
+      okText: '删除',
+      onOk: async () => {
+        try {
+          await tauriInvoke('webdav_delete', { server: CLOUD_SERVER, username: cfg.user, password: cfg.pass, folder: CLOUD_FOLDER, filename: file });
+          toast('云端备份已删除');
+          cloudList();
+        } catch (e) {
+          cloudFail(e, '删除失败');
+        }
+      }
+    });
+  }
+
   // ---------- 主题 ----------
   const THEME_KEY = 'mercury.theme';
   const THEMES = [
@@ -2381,12 +2570,13 @@
   function openSettings() {
     const n = (S.trash || []).length;
     const cur = currentThemeId();
+    const jd = cloudCfg();
     const themeOpts = THEMES.map(t => `<button class="theme-opt ${t.id === cur ? 'on' : ''}" data-act="theme-set" data-theme="${t.id}">
       <span class="theme-swatch" style="background:${t.swatch}"><i style="background:${t.accent}"></i></span>
       <span class="theme-name"><b>${t.name}</b><span>${t.hint}</span></span>
     </button>`).join('');
 
-    openModal(modalShell('设置', '原型阶段 · 数据只保存在这台电脑上。',
+    openModal(modalShell('设置', '数据保存在本机，可导出或云备份。',
       `<div class="set-label">外观主题</div>
        <div class="theme-grid">${themeOpts}</div>
        <div class="kv"><span class="k">存储方式</span><span class="v">本地 · localStorage</span></div>
@@ -2395,6 +2585,17 @@
          <button class="btn" data-act="backup-import">${icon('restore', 14)}导入备份</button>
        </div>
        <div class="muted backup-hint">备份包含全部用户数据和当前主题；导入会覆盖现有数据。</div>
+       <div class="hr"></div>
+       <div class="set-label">坚果云云备份</div>
+       <input class="input" id="jdUser" placeholder="坚果云账号（注册邮箱）" value="${esc(jd.user || '')}" style="margin-bottom:8px">
+       <input class="input" id="jdPass" type="password" placeholder="${jd.pass ? '应用密码已保存，可输入新密码替换' : '应用密码（不是登录密码）'}" style="margin-bottom:10px">
+       <div class="set-actions" style="margin-top:0">
+         <button class="btn" id="jdTest" data-act="jd-test">${icon('check', 14)}测试连接</button>
+         <button class="btn btn-amber" id="jdBackup" data-act="jd-backup">${icon('arrowUp', 14)}备份到坚果云</button>
+         <button class="btn" id="jdList" data-act="jd-list">${icon('db', 14)}云端记录</button>
+       </div>
+       <div class="muted backup-hint">首次使用：登录坚果云网页版 → 账户信息 → 安全选项 → 添加应用密码。备份存放在坚果云的 /MercuryPlan/ 文件夹，账号和应用密码只保存在本机。</div>
+       <div class="muted backup-hint" id="jdLast">上次云备份：${fmtCloudTime(jd.lastBackupAt)}</div>
        <button class="set-row" data-act="trash-open">
          <span class="set-row-main">${icon('trash', 15)}<span>回收站</span></span>
          <span class="set-row-side">${n ? n + ' 条可恢复' : '空'}${icon('chevR', 14)}</span>
@@ -2595,6 +2796,11 @@
       case 'backup-export': exportBackup(); break;
       case 'backup-import': importBackup(); break;
       case 'export-success-ok': closeModal(); break;
+      case 'jd-test': cloudTest(); break;
+      case 'jd-backup': cloudBackup(); break;
+      case 'jd-list': cloudList(); break;
+      case 'jd-restore': cloudRestore(id); break;
+      case 'jd-del': cloudDelete(id); break;
 
       case 'toggle-task': toggleTask(id); break;
       case 'task-del': {
