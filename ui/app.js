@@ -77,6 +77,9 @@
     scissors: '<circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><path d="M20 4L8.4 15.6"/><path d="M20 20L8.4 8.4"/>',
     clock: '<circle cx="12" cy="12" r="8.6"/><path d="M12 7.2V12l3.4 2"/>',
     arrowUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+    heart: '<path d="M12 20.2C7.4 16.9 4.2 13.9 4.2 10.5 4.2 8 6.1 6.2 8.4 6.2c1.4 0 2.7.7 3.6 1.9.9-1.2 2.2-1.9 3.6-1.9 2.3 0 4.2 1.8 4.2 4.3 0 3.4-3.2 6.4-7.8 9.7z"/>',
+    camera: '<path d="M4.2 8.2h2.9l1.5-2.4h6.8l1.5 2.4h2.9a1.3 1.3 0 011.3 1.3v8a1.3 1.3 0 01-1.3 1.3H4.2a1.3 1.3 0 01-1.3-1.3v-8a1.3 1.3 0 011.3-1.3z"/><circle cx="12" cy="13.6" r="3.3"/>',
+    music: '<path d="M9 18.2V5.8l11-2.2v12.6"/><circle cx="6.6" cy="18.2" r="2.4"/><circle cx="17.6" cy="16.2" r="2.4"/>',
     trash: '<path d="M4 6.6h16"/><path d="M9.4 6.6V4.7c0-.6.5-1.1 1.1-1.1h3c.6 0 1.1.5 1.1 1.1v1.9"/><path d="M6.2 6.6l.9 12.6c.06.9.8 1.6 1.7 1.6h6.4c.9 0 1.64-.7 1.7-1.6l.9-12.6"/><path d="M10.2 10.4v6.6M13.8 10.4v6.6"/>',
     restore: '<path d="M3.4 11.6l8.6-7.4 8.6 7.4"/><path d="M5.9 10.2v9.2h12.2v-9.2"/><path d="M12 20.2v-6M9.4 16.4l2.6-2.6 2.6 2.6"/>'
   };
@@ -262,6 +265,39 @@
       }
     ];
 
+    // 兴趣爱好：喜欢的事留个位置，每次投入就记一笔
+    const hobbies = [
+      {
+        id: 'hb1', name: '胶片摄影', icon: 'camera', tag: '摄影', level: 5, note: '拍完的卷攒到十二卷再一起冲。',
+        logs: [
+          { id: 'hg1', date: iso(shift(TODAY, -3)), minutes: 90, note: '在老城区扫街，拍了两卷。' },
+          { id: 'hg2', date: iso(shift(TODAY, -18)), minutes: 45, note: '给爸妈拍了半卷人像。' },
+          { id: 'hg3', date: iso(shift(TODAY, -41)), minutes: 60, note: '' }
+        ]
+      },
+      {
+        id: 'hb2', name: '烘焙', icon: 'coffee', tag: '厨房', level: 4, note: '欧包和司康目前比较稳。',
+        logs: [
+          { id: 'hg4', date: iso(shift(TODAY, -2)), minutes: 120, note: '试了全麦欧包，裂口很漂亮。' },
+          { id: 'hg5', date: iso(shift(TODAY, -15)), minutes: 90, note: '' }
+        ]
+      },
+      {
+        id: 'hb3', name: '夜跑 5 公里', icon: 'run', tag: '运动', level: 3, note: '',
+        logs: [
+          { id: 'hg6', date: iso(shift(TODAY, -1)), minutes: 32, note: '配速稳住了，很舒服。' },
+          { id: 'hg7', date: iso(shift(TODAY, -5)), minutes: 35, note: '' },
+          { id: 'hg8', date: iso(shift(TODAY, -9)), minutes: 34, note: '' }
+        ]
+      },
+      {
+        id: 'hb4', name: '钢笔字', icon: 'pen', tag: '手写', level: 3, note: '临的是《灵飞经》。',
+        logs: [
+          { id: 'hg9', date: iso(shift(TODAY, -6)), minutes: 25, note: '今天写竖钩顺手。' }
+        ]
+      }
+    ];
+
     const achievements = [
       { id: 'a1', title: '完成《年度胶片摄影集》', date: iso(shift(TODAY, -25)), source: '项目', note: '印了 60 页，送了三本给朋友。' },
       { id: 'a2', title: '连续阅读 100 天', date: iso(shift(TODAY, -71)), source: '习惯', note: '从三分钟热度到每天睡前半小时。' },
@@ -274,7 +310,7 @@
     return {
       v: 1,
       meta: { demo: true, seedDate: k },
-      tasks, projects, goals, habits, wishes, trivia, achievements, routines, trash: [],
+      tasks, projects, goals, habits, wishes, trivia, achievements, routines, hobbies, trash: [],
       ui: {
         route: 'today', cursor: k, taskView: 'day', habitTab: 'build', routineTab: 'all',
         goalId: 'g22', expanded: { g1: false, g2: true, g22: true, g12: true, g13: true, g3: true },
@@ -297,7 +333,9 @@
   // 旧版本（没有回收站 / 没有日常记录）的数据升级一下，不丢东西
   if (!Array.isArray(S.trash)) S.trash = [];
   if (!Array.isArray(S.routines)) S.routines = [];
+  if (!Array.isArray(S.hobbies)) S.hobbies = [];
   S.routines.forEach(r => { if (!Array.isArray(r.logs)) r.logs = []; });
+  S.hobbies.forEach(h => { if (!Array.isArray(h.logs)) h.logs = []; });
   if (!S.ui) S.ui = {};
   if (!S.ui.routineTab) S.ui.routineTab = 'all';
   if (S.v !== 2) { S.v = 2; }
@@ -308,7 +346,7 @@
 
   const BACKUP_FORMAT = 'mercury-plan-backup';
   const BACKUP_VERSION = 1;
-  const BACKUP_ARRAYS = ['tasks', 'projects', 'goals', 'habits', 'wishes', 'trivia', 'achievements', 'routines', 'trash'];
+  const BACKUP_ARRAYS = ['tasks', 'projects', 'goals', 'habits', 'wishes', 'trivia', 'achievements', 'routines', 'hobbies', 'trash'];
 
   function createBackup() {
     return {
@@ -390,11 +428,13 @@
         input.click();
       });
       if (!payload) return;
-      // 老备份里没有日常记录，补成空数组，别让校验把人拦在门外
+      // 老备份里没有日常记录 / 兴趣爱好，补成空数组，别让校验把人拦在门外
       if (payload.data && !Array.isArray(payload.data.routines)) payload.data.routines = [];
+      if (payload.data && !Array.isArray(payload.data.hobbies)) payload.data.hobbies = [];
       validateBackup(payload);
       const imported = clone(payload.data);
       imported.routines.forEach(r => { if (!Array.isArray(r.logs)) r.logs = []; });
+      imported.hobbies.forEach(h => { if (!Array.isArray(h.logs)) h.logs = []; });
       askConfirm({
         title: '导入备份并覆盖当前数据？',
         detail: `将替换当前全部数据（${imported.tasks.length} 条待办、${imported.projects.length} 个项目、${imported.routines.length} 个日常事项）。此操作不可自动撤销，请确认你已准备好这份备份。`,
@@ -444,7 +484,7 @@
   // 删除都走这里：进回收站 → 可撤销 → 设置里还能「恢复删除」
   const TRASH_LIMIT = 40;
   const clone = o => (typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
-  const KIND_LABEL = { task: '待办', trivia: '琐事', goal: '目标', project: '项目', habit: '习惯', wish: '心愿', achievement: '成就', routine: '日常' };
+  const KIND_LABEL = { task: '待办', trivia: '琐事', goal: '目标', project: '项目', habit: '习惯', wish: '心愿', achievement: '成就', routine: '日常', hobby: '兴趣' };
 
   // 记下「这个节点在树里的位置」，形如 [{ title: '根目标' }, { title: '子目标' }, ...]
   // 用标题而不是 id，是因为删除后 id 就已失效，恢复时要靠路径一层层找回来
@@ -500,6 +540,7 @@
     achievement: e => putBack(S.achievements, e.items.achievements[0], e.idx),
     habit: e => putBack(S.habits, e.items.habits[0], e.idx),
     routine: e => putBack(S.routines, e.items.routines[0], e.idx),
+    hobby: e => putBack(S.hobbies, e.items.hobbies[0], e.idx),
     project: e => {
       putBack(S.projects, e.items.projects[0], e.idx);
       const p = e.items.projects[0];
@@ -653,6 +694,38 @@
     toast(`已删除日常事项 <b>${esc(r.name)}</b>${n ? `，含 ${n} 条记录` : ''}`, '撤销', () => { undoTrash(entry.id); render(false); toast('已撤销删除'); });
   }
 
+  // 单条兴趣记录不进回收站，直接用 toast 撤销
+  function delHobbyLog(rid, logId) {
+    const hb = hobbyById(rid);
+    if (!hb) return;
+    const idx = (hb.logs || []).findIndex(l => l.id === logId);
+    if (idx < 0) return;
+    const log = hb.logs[idx];
+    hb.logs.splice(idx, 1);
+    save(); render(false);
+    if (drawerOpen()) drawerHobby(rid);
+    toast('已删除 1 条记录', '撤销', () => {
+      const again = hobbyById(rid);
+      if (!again) return;
+      again.logs.splice(Math.min(idx, again.logs.length), 0, log);
+      save(); render(false);
+      if (drawerOpen()) drawerHobby(rid);
+      toast('已撤销删除');
+    });
+  }
+
+  function delHobby(id) {
+    const hb = hobbyById(id);
+    if (!hb) return;
+    const n = (hb.logs || []).length;
+    const entry = { id: uid('r'), kind: 'hobby', title: hb.name, count: 1, idx: S.hobbies.indexOf(hb), items: { hobbies: [hb] } };
+    S.hobbies.splice(entry.idx, 1);
+    pushTrash(entry);
+    closeDrawer();
+    save(); render(false);
+    toast(`已删除爱好 <b>${esc(hb.name)}</b>${n ? `，含 ${n} 条记录` : ''}`, '撤销', () => { undoTrash(entry.id); render(false); toast('已撤销删除'); });
+  }
+
   // 单条记录不进回收站，直接用 toast 撤销，避免回收站被零碎记录塞满
   function delRoutineLog(rid, logId) {
     const r = routineById(rid);
@@ -678,6 +751,7 @@
   const goalById = id => S.goals.find(g => g.id === id);
   const habitById = id => S.habits.find(h => h.id === id);
   const routineById = id => S.routines.find(r => r.id === id);
+  const hobbyById = id => S.hobbies.find(h => h.id === id);
 
   function tasksOn(k) {
     return S.tasks.filter(t => t.date === k).sort((a, b) => {
@@ -843,7 +917,7 @@
   const NAV = [
     { group: '每日', items: [{ id: 'today', label: '今日总览', icon: 'sun' }] },
     { group: '规划', items: [{ id: 'tasks', label: '日程待办', icon: 'cal' }, { id: 'goals', label: '目标拆解', icon: 'target' }, { id: 'projects', label: '我的项目', icon: 'layers' }] },
-    { group: '记录', items: [{ id: 'routines', label: '日常记录', icon: 'cycle' }, { id: 'habits', label: '习惯', icon: 'repeat' }, { id: 'wishes', label: '心愿清单', icon: 'star' }, { id: 'trivia', label: '琐事记录', icon: 'pen' }, { id: 'achievements', label: '成就', icon: 'trophy' }] }
+    { group: '记录', items: [{ id: 'routines', label: '日常记录', icon: 'cycle' }, { id: 'habits', label: '习惯', icon: 'repeat' }, { id: 'hobbies', label: '兴趣爱好', icon: 'heart' }, { id: 'wishes', label: '心愿清单', icon: 'star' }, { id: 'trivia', label: '琐事记录', icon: 'pen' }, { id: 'achievements', label: '成就', icon: 'trophy' }] }
   ];
 
   function navExtra(id) {
@@ -977,6 +1051,7 @@
       case 'goals': return viewGoals();
       case 'projects': return viewProjects();
       case 'routines': return viewRoutines();
+      case 'hobbies': return viewHobbies();
       case 'habits': return viewHabits();
       case 'wishes': return viewWishes();
       case 'trivia': return viewTrivia();
@@ -1387,7 +1462,7 @@
           <span class="status ${stCls}">${PROJECT_STATUS[p.status]}</span>
         </div>
         <h3>${esc(p.name)}</h3>
-        <div class="pnext">${p.next ? `<span>下一步</span><b>${esc(p.next)}</b>` : '<span>—</span>'}</div>
+        <div class="pnext">${p.next ? `<span>下一步</span><b>${esc(p.next)}</b>` : '<span class="muted">还没有下一步</span>'}<button class="pnext-edit" data-act="project-next-edit" data-id="${p.id}" title="${p.next ? '修改下一步' : '写一个下一步'}">${p.next ? icon('pen', 12) : icon('plus', 12)}</button></div>
         <div class="pbar"><i style="width:${p.progress}%;background:${p.color}"></i></div>
         <div class="pfoot"><span><b>${p.progress}%</b></span><span>${p.due ? '截止 ' + fmtShort(p.due) : '无截止'}</span></div>
       </article>`;
@@ -1716,6 +1791,142 @@
     return h;
   }
 
+  // ---------- 兴趣爱好 ----------
+  function hobbyLogs(h) {
+    return (h.logs || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+  }
+  function hobbyStats(h) {
+    const logs = hobbyLogs(h);
+    const month = TODAY_K.slice(0, 7);
+    return {
+      total: logs.length,
+      thisMonth: logs.filter(l => l.date.slice(0, 7) === month).length,
+      minutes: sum(logs.map(l => l.minutes || 0)),
+      last: logs[0] || null
+    };
+  }
+
+  function viewHobbies() {
+    const list = S.hobbies;
+    const month = TODAY_K.slice(0, 7);
+    const monthTimes = sum(list.map(x => (x.logs || []).filter(l => l.date.slice(0, 7) === month).length));
+    const totalTimes = sum(list.map(x => (x.logs || []).length));
+    const totalMin = sum(list.map(x => hobbyStats(x).minutes));
+
+    let h = `<div class="page-head">
+      <div>
+        <h1 class="page-title">兴趣爱好</h1>
+        <div class="page-sub">
+          <span>${list.length} 个爱好</span><span class="dot-sep"></span>
+          <span>本月投入 ${monthTimes} 次</span><span class="dot-sep"></span>
+          <span>累计 ${totalTimes} 条记录${totalMin ? ` · 约 ${Math.round(totalMin / 60)} 小时` : ''}</span>
+        </div>
+      </div>
+      <div class="page-actions"><button class="btn btn-amber" data-act="hobby-new">${icon('plus', 14)} 新爱好</button></div>
+    </div>`;
+
+    if (!list.length) {
+      h += `<div class="card card-empty" style="padding:44px">
+        还没有记录爱好。<br>摄影、烘焙、夜跑、写点什么……喜欢的事都值得留个位置。
+      </div>`;
+      return h;
+    }
+
+    h += `<div class="grid-cards">`;
+    list.forEach(hb => {
+      const st = hobbyStats(hb);
+      h += `<article class="hobby-card">
+        <button class="card-x" data-act="hobby-del" data-id="${hb.id}" title="删除这个爱好">${icon('trash', 26)}</button>
+        <div class="hobby-top">
+          <span class="hobby-ico">${icon(hb.icon || 'heart', 15)}</span>
+          ${hb.tag ? `<span class="chip">${esc(hb.tag)}</span>` : ''}
+        </div>
+        <h3 data-act="open-hobby" data-id="${hb.id}">${esc(hb.name)}</h3>
+        ${stars(hb.level || 3)}
+        ${hb.note ? `<div class="hobby-note">${esc(hb.note)}</div>` : ''}
+        <div class="hobby-meta">累计 <b>${st.total}</b> 次${st.thisMonth ? ` · 本月 ${st.thisMonth} 次` : ''}${st.last ? ` · 最近 ${relLabel(st.last.date)}` : ''}</div>
+        <div class="hobby-foot">
+          <button class="btn sm btn-amber" data-act="hobby-log" data-id="${hb.id}">记一笔</button>
+          <button class="btn sm" data-act="open-hobby" data-id="${hb.id}">全部记录</button>
+        </div>
+      </article>`;
+    });
+    h += `</div>`;
+    return h;
+  }
+
+  function drawerHobby(id) {
+    const hb = hobbyById(id);
+    if (!hb) return;
+    const logs = hobbyLogs(hb);
+    const st = hobbyStats(hb);
+
+    let h = `<div class="drawer-head">
+      <div class="dh-main">
+        <div class="dh-kicker">兴趣爱好${hb.tag ? ' · ' + esc(hb.tag) : ''}</div>
+        <h2>${esc(hb.name)}</h2>
+      </div>
+      <button class="icon-btn" data-act="drawer-close">${icon('x', 16)}</button>
+    </div><div class="drawer-body">`;
+
+    h += `<div class="flex" style="align-items:flex-end;gap:8px;margin-bottom:2px">
+      <span class="mono" style="font-size:40px;font-weight:600;letter-spacing:-.04em;line-height:1;color:#F0C88C">${st.total}</span>
+      <span class="muted" style="font-size:12px;padding-bottom:5px">次投入${st.minutes ? ` · 约 ${Math.round(st.minutes / 60)} 小时` : ''}</span>
+    </div>
+    <div class="muted" style="font-size:11px;margin-bottom:16px">${st.last ? `最近一次 ${fmtFull(st.last.date)} · ${relLabel(st.last.date)}` : '还没记过，玩完顺手记一笔。'}</div>`;
+
+    h += `<div class="drawer-section" style="display:flex;gap:8px">
+      <button class="btn btn-amber" data-act="hobby-log" data-id="${hb.id}">${icon('plus', 14)} 记一笔</button>
+      <button class="btn btn-danger" data-act="hobby-del" data-id="${hb.id}">${icon('trash', 14)} 删除这个爱好</button>
+    </div>`;
+
+    if (hb.note) h += `<div class="drawer-section"><h4>备注</h4><div class="muted" style="font-size:12px;line-height:1.7">${esc(hb.note)}</div></div>`;
+
+    h += `<div class="drawer-section"><h4>全部记录 · ${logs.length}</h4>`;
+    if (!logs.length) {
+      h += `<div class="muted" style="font-size:11.5px">还没有记录。点上面「记一笔」，写下哪天玩的、花了多久。</div>`;
+    } else {
+      logs.forEach(l => {
+        h += `<div class="log-row">
+          <div class="log-main">
+            <div class="log-date">${fmtMDW(l.date)}<span>${relLabel(l.date)}${l.minutes ? ` · ${l.minutes} 分钟` : ''}</span></div>
+            ${l.note ? `<div class="log-note">${esc(l.note)}</div>` : ''}
+          </div>
+          <button class="row-x" data-act="hobby-log-del" data-id="${l.id}" data-rid="${hb.id}" title="删除这条记录">${icon('trash', 26)}</button>
+        </div>`;
+      });
+    }
+    h += `</div></div>`;
+    openDrawer(h);
+  }
+
+  function openNewHobby() {
+    const iconOpts = [['heart', '心形'], ['camera', '相机'], ['book', '书'], ['run', '跑步'], ['coffee', '咖啡'], ['pen', '笔'], ['leaf', '植物'], ['music', '音乐'], ['moon', '夜晚'], ['zap', '能量']]
+      .map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+    openModal(modalShell('新爱好', '喜欢的事，留个位置，玩完顺手记一笔。',
+      `<div class="field"><label>名称</label><input class="input" id="hoName" placeholder="例：胶片摄影"></div>
+       <div class="field"><label>分类（可选）</label><input class="input" id="hoTag" placeholder="例：摄影 / 运动 / 厨房"></div>
+       <div class="field"><label>图标</label><select class="input" id="hoIcon">${iconOpts}</select></div>
+       <div class="field"><label>热爱程度</label>
+         <select class="input" id="hoLevel"><option value="5">★★★★★ 生活支柱</option><option value="4">★★★★ 很热爱</option><option value="3" selected>★★★ 喜欢</option><option value="2">★★ 有点兴趣</option><option value="1">★ 随缘玩玩</option></select>
+       </div>
+       <div class="field"><label>备注（可选）</label><input class="input" id="hoNote" placeholder="例：拍完的卷攒到十二卷再一起冲"></div>`,
+      `<button class="btn btn-ghost" data-act="m-close">取消</button>
+       <button class="btn btn-amber" data-act="hobby-create">创建</button>`));
+  }
+
+  function openHobbyLog(id) {
+    const hb = hobbyById(id);
+    if (!hb) return;
+    openModal(modalShell(`记一笔 · ${esc(hb.name)}`, '玩的时候开心就好，回头补一条记录就行。',
+      `<div class="log-target">${icon(hb.icon || 'heart', 15)}<b>${esc(hb.name)}</b><span>累计 ${(hb.logs || []).length} 次</span></div>
+       <div class="field"><label>哪天玩的（必填）</label><input class="input" id="hlDate" type="date" value="${TODAY_K}" max="${TODAY_K}"></div>
+       <div class="field"><label>花了多久（可选，分钟）</label><input class="input" id="hlMinutes" type="number" min="1" max="1440" placeholder="例：90"></div>
+       <div class="field"><label>想说的话（可选）</label><input class="input" id="hlNote" placeholder="例：老城区扫街，拍了两卷"></div>`,
+      `<button class="btn btn-ghost" data-act="m-close">取消</button>
+       <button class="btn btn-amber" data-act="hobby-log-save" data-id="${hb.id}">记下来</button>`));
+  }
+
   // ---------- Toast ----------
   // 记录最近一条带「撤销」的 toast，Ctrl Z 可以直接吃到它
   let lastUndo = null;
@@ -1861,11 +2072,13 @@
         <span>进度 ${p.progress}%</span><span>${p.due ? '截止 ' + fmtFull(p.due) : '无截止日期'}</span>
       </div>`;
 
+    h += `<div class="drawer-section"><h4>下一步</h4>`;
     if (p.next) {
-      h += `<div class="drawer-section"><h4>下一步</h4>
-        <div style="padding:11px 12px;border-radius:10px;background:rgba(233,163,60,.06);border:1px solid rgba(233,163,60,.16);font-size:13px;color:var(--text)">${esc(p.next)}</div>
-      </div>`;
+      h += `<div style="padding:11px 12px;border-radius:10px;background:rgba(233,163,60,.06);border:1px solid rgba(233,163,60,.16);font-size:13px;color:var(--text)">${esc(p.next)}</div>`;
+    } else {
+      h += `<div class="muted" style="font-size:12px;margin-bottom:8px">还没有下一步，写一个能直接动手的小事。</div>`;
     }
+    h += `<button class="btn sm" data-act="project-next-edit" data-id="${p.id}">${p.next ? icon('pen', 12) + ' 修改' : icon('plus', 12) + ' 写一个下一步'}</button></div>`;
     if (p.note) h += `<div class="drawer-section"><h4>项目说明</h4><div class="muted" style="font-size:12px;line-height:1.75">${esc(p.note)}</div></div>`;
 
     h += `<div class="drawer-section"><h4>关联任务 · ${done}/${tasks.length}</h4>`;
@@ -1880,7 +2093,7 @@
     h += `</div>`;
 
     h += `<div class="drawer-section" style="display:flex;gap:8px">
-      <button class="btn btn-amber" data-act="project-next" data-id="${p.id}">把下一步排进今天</button>
+      ${p.next ? `<button class="btn btn-amber" data-act="project-next" data-id="${p.id}">把下一步排进今天</button>` : ''}
       <button class="btn btn-danger" data-act="project-del" data-id="${p.id}">${icon('trash', 14)} 删除项目</button>
     </div></div>`;
     openDrawer(h);
@@ -2154,6 +2367,17 @@
        <button class="btn btn-amber" data-act="project-create">创建</button>`));
   }
 
+  function openProjectNext(id) {
+    const p = projById(id);
+    if (!p) return;
+    openModal(modalShell(p.next ? '修改下一步' : '写一个下一步', '下一步要是能直接动手的一件小事。',
+      `<div class="field"><label>${p.name} · 下一步</label><input class="input" id="pnNext" value="${esc(p.next || '')}" placeholder="例：量窗帘尺寸"></div>`,
+      `${p.next ? `<button class="btn btn-ghost" data-act="project-next-clear" data-id="${p.id}">清空</button>` : ''}
+       <button class="btn btn-ghost" data-act="m-close">取消</button>
+       <button class="btn btn-amber" data-act="project-next-save" data-id="${p.id}">保存</button>`));
+    setTimeout(() => { const el = document.getElementById('pnNext'); if (el) el.focus(); }, 40);
+  }
+
   function openSettings() {
     const n = (S.trash || []).length;
     const cur = currentThemeId();
@@ -2193,7 +2417,8 @@
       { label: '今日小结', icon: 'check', hint: '', run: openSummary },
       { label: '新建任务', icon: 'plus', hint: '', run: () => { go('tasks'); setTimeout(() => { const el = document.getElementById('taskAdd'); if (el) el.focus(); }, 40); } },
       { label: '新建习惯', icon: 'repeat', hint: '', run: openNewHabit },
-      { label: '新建日常事项', icon: 'cycle', hint: '', run: openNewRoutine }
+      { label: '新建日常事项', icon: 'cycle', hint: '', run: openNewRoutine },
+      { label: '新建兴趣', icon: 'heart', hint: '', run: openNewHobby }
     ]);
     palSel = 0;
     const layer = document.getElementById('modalLayer');
@@ -2221,6 +2446,7 @@
       { label: '新建任务', icon: 'plus', hint: '', run: () => { go('tasks'); setTimeout(() => { const el = document.getElementById('taskAdd'); if (el) el.focus(); }, 40); } },
       { label: '新建习惯', icon: 'repeat', hint: '', run: openNewHabit },
       { label: '新建日常事项', icon: 'cycle', hint: '', run: openNewRoutine },
+      { label: '新建兴趣', icon: 'heart', hint: '', run: openNewHobby },
       { label: '回收站', icon: 'trash', hint: '恢复删除', run: openTrash }
     ]);
   };
@@ -2570,11 +2796,73 @@
         }
         break;
       }
+      case 'project-next-edit': openProjectNext(id); break;
+      case 'project-next-save': {
+        const p = projById(id);
+        if (!p) break;
+        const v = ((document.getElementById('pnNext') || {}).value || '').trim();
+        if (!v) { toast('写点什么，或者点「清空」'); break; }
+        p.next = v;
+        save(); closeModal(); render(false);
+        if (drawerOpen()) drawerProject(p.id);
+        toast('下一步已更新：<b>' + esc(v) + '</b>');
+        break;
+      }
+      case 'project-next-clear': {
+        const p = projById(id);
+        if (!p) break;
+        p.next = '';
+        save(); closeModal(); render(false);
+        if (drawerOpen()) drawerProject(p.id);
+        toast('已清空下一步');
+        break;
+      }
 
       // ---- 日常记录 ----
       case 'routine-tab':
         S.ui.routineTab = el.dataset.tab; save(); render(false); break;
       case 'routine-new': openNewRoutine(); break;
+
+      case 'hobby-new': openNewHobby(); break;
+      case 'open-hobby': drawerHobby(id); break;
+      case 'hobby-log': openHobbyLog(id); break;
+      case 'hobby-del': {
+        const hb = hobbyById(id);
+        if (!hb) break;
+        askConfirm({
+          title: `删除爱好「${hb.name}」？`,
+          detail: `会一起删掉 ${(hb.logs || []).length} 条记录。如果只是暂时不玩了，删掉也没关系，回收站里能找回来。`,
+          okText: '删除爱好',
+          onOk: () => delHobby(id)
+        });
+        break;
+      }
+      case 'hobby-log-del': delHobbyLog(el.dataset.rid, id); break;
+      case 'hobby-create': {
+        const name = (document.getElementById('hoName') || {}).value || '';
+        if (!name.trim()) break;
+        const tag = (document.getElementById('hoTag') || {}).value || '';
+        const hicon = (document.getElementById('hoIcon') || {}).value || 'heart';
+        const level = Number((document.getElementById('hoLevel') || {}).value || 3);
+        const note = (document.getElementById('hoNote') || {}).value || '';
+        S.hobbies.push({ id: uid('hb'), name: name.trim(), icon: hicon, tag: tag.trim(), level, note: note.trim(), logs: [] });
+        save(); closeModal(); render(false);
+        toast(`已创建爱好 <b>${esc(name.trim())}</b>`);
+        break;
+      }
+      case 'hobby-log-save': {
+        const hb = hobbyById(el.dataset.id);
+        if (!hb) break;
+        const date = (document.getElementById('hlDate') || {}).value || TODAY_K;
+        const minutes = Number((document.getElementById('hlMinutes') || {}).value || 0);
+        const note = (document.getElementById('hlNote') || {}).value || '';
+        if (!Array.isArray(hb.logs)) hb.logs = [];
+        hb.logs.push({ id: uid('hg'), date, minutes: clamp(minutes, 0, 1440), note: note.trim() });
+        save(); closeModal(); render(false);
+        if (drawerOpen()) drawerHobby(hb.id);
+        toast(`已记下 <b>${esc(hb.name)}</b> · ${fmtMD(date)}${minutes ? `，${minutes} 分钟` : ''}`);
+        break;
+      }
       case 'open-routine': drawerRoutine(id); break;
       case 'routine-log': openRoutineLog(id); break;
       case 'routine-del': {

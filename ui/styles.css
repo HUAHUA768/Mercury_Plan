@@ -662,6 +662,9 @@ svg{display:block}
 .pcard h3{font-size:14.5px;font-weight:600;margin:0 0 7px;letter-spacing:-.01em;line-height:1.4}
 .pnext{font-size:11.5px;color:var(--text-3);display:flex;gap:6px;align-items:baseline;min-height:19px}
 .pnext b{font-weight:400;color:var(--text-2)}
+.pnext-edit{margin-left:auto;align-self:center;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--fill-2);color:var(--text-3);cursor:pointer;flex:none}
+.pnext-edit:hover{color:var(--text-2);border-color:var(--line-strong)}
+.pnext .muted{font-size:11.5px}
 .pbar{height:3px;border-radius:3px;background:var(--track);margin:13px 0 7px;overflow:hidden}
 .pbar i{display:block;height:100%;border-radius:3px}
 .pfoot{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
@@ -1063,5 +1066,20 @@ svg{display:block}
 .rm-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rm-meta{font-size:10.5px;color:var(--text-3);margin-top:1px;font-variant-numeric:tabular-nums}
 .routine-mini.over .rm-meta{color:var(--red-text)}
+
+/* 兴趣爱好 */
+.hobby-card{padding:15px;border-radius:14px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:170px;position:relative}
+.hobby-top{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.hobby-ico{
+  width:28px;height:28px;border-radius:9px;display:grid;place-items:center;
+  background:hsl(var(--hue) 80% 57% / .09);color:var(--amber-2);flex:0 0 auto;
+}
+.hobby-card h3{font-size:14px;font-weight:500;margin:0;line-height:1.45;cursor:pointer}
+.hobby-card h3:hover{color:var(--amber-2)}
+.hobby-card .stars{margin-top:5px}
+.hobby-note{font-size:11.5px;color:var(--text-3);line-height:1.6;margin-top:7px}
+.hobby-meta{font-size:11px;color:var(--text-3);margin-top:auto;padding-top:10px;font-variant-numeric:tabular-nums}
+.hobby-meta b{color:var(--amber-2);font-weight:600}
+.hobby-foot{display:flex;gap:8px;margin-top:10px}
 
 .no-anim *,.no-anim *::before,.no-anim *::after{transition:none!important;animation:none!important}
