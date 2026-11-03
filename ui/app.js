@@ -66,6 +66,8 @@
     db: '<ellipse cx="12" cy="5.6" rx="7.4" ry="3"/><path d="M4.6 5.6v12.8c0 1.66 3.3 3 7.4 3s7.4-1.34 7.4-3V5.6"/><path d="M4.6 12c0 1.66 3.3 3 7.4 3s7.4-1.34 7.4-3"/>',
     droplet: '<path d="M12 3.2s5.4 6.2 5.4 9.7a5.4 5.4 0 11-10.8 0C6.6 9.4 12 3.2 12 3.2z"/>',
     book: '<path d="M4 4.6A2.6 2.6 0 016.6 2H20v17.4H6.6A2.6 2.6 0 004 22V4.6z"/><path d="M4 19.4A2.6 2.6 0 016.6 16.8H20"/>',
+    note: '<path d="M6 3.2h8.2L19 7.9v12.9H6z"/><path d="M14 3.4v4.7h4.8"/><path d="M9 12.2h6M9 15.7h4"/>',
+    eye: '<path d="M2.6 12S6 6.4 12 6.4 21.4 12 21.4 12 18 17.6 12 17.6 2.6 12 2.6 12z"/><circle cx="12" cy="12" r="2.8"/>',
     run: '<circle cx="15.2" cy="4.6" r="1.9"/><path d="M9 21l2.4-5.2 3-1.8-2-4-2.8 1L7 14"/><path d="M14.4 14l2.4 3 .6 4"/>',
     moon: '<path d="M20 14.6A8.1 8.1 0 019.4 4a8.5 8.5 0 1010.6 10.6z"/>',
     coffee: '<path d="M4.5 8h11.6v4.6a4.8 4.8 0 01-4.8 4.8H9.3a4.8 4.8 0 01-4.8-4.8V8z"/><path d="M16.1 9.2h2.2a2.4 2.4 0 010 4.8h-2.2"/><path d="M4.5 21h13"/>',
@@ -298,6 +300,77 @@
       }
     ];
 
+    // 备忘录：一篇一篇写，用 Markdown 排版
+    const ago = h => new Date(Date.now() - h * 3600000).toISOString();
+    const memos = [
+      {
+        id: 'mn1', title: '水星计划 · 下一步', created: ago(52), updated: ago(2),
+        content: [
+          '# 水星计划 · 下一步',
+          '',
+          '把这套原型变成真正能用的桌面软件。**先把十个模块做对**，再谈别的。',
+          '',
+          '## 这周要做的',
+          '',
+          '- [x] 信息架构定稿',
+          '- [x] 日程待办模块',
+          '- [ ] 备忘录模块（Markdown 渲染）',
+          '- [ ] 回收站统一入口',
+          '',
+          '## 记一下',
+          '',
+          '> 慢一点没关系，别停。',
+          '',
+          '| 模块 | 状态 | 备注 |',
+          '| --- | --- | --- |',
+          '| 今日总览 | 进行中 | 还差完成度展示 |',
+          '| 备忘录 | 刚建 | 支持 Markdown |',
+          '',
+          '快捷键 `Ctrl K` 跳转，`Ctrl Shift Space` 快速记录。'
+        ].join('\n')
+      },
+      {
+        id: 'mn2', title: '书房改造 · 待买清单', created: ago(120), updated: ago(26),
+        content: [
+          '# 书房改造',
+          '',
+          '书桌、书架已经就位，剩下软装。',
+          '',
+          '## 待买',
+          '',
+          '1. 遮光窗帘（米色，量好再下单）',
+          '2. 一盏落地灯',
+          '3. 桌面收纳盒 ×2',
+          '',
+          '## 尺寸',
+          '',
+          '- 窗户：宽 168 cm，高 210 cm',
+          '- 书桌：140 × 70 cm',
+          '',
+          '> 周六上午量窗帘，下午去建材市场。'
+        ].join('\n')
+      },
+      {
+        id: 'mn3', title: '读书笔记：《设计中的设计》', created: ago(300), updated: ago(70),
+        content: [
+          '# 《设计中的设计》',
+          '',
+          '原研哉 著 · 读完第 6 章',
+          '',
+          '## 摘抄',
+          '',
+          '> 设计不是一种技能，而是捕捉事物本质的感觉能力。',
+          '',
+          '## 想法',
+          '',
+          '- 「空」不是没有，是留出接纳的可能',
+          '- 信息建筑：把复杂的东西重新排列，而不是删掉',
+          '',
+          '下一步：读第 7 章，顺手写一篇 300 字的短评。'
+        ].join('\n')
+      }
+    ];
+
     const achievements = [
       { id: 'a1', title: '完成《年度胶片摄影集》', date: iso(shift(TODAY, -25)), source: '项目', note: '印了 60 页，送了三本给朋友。' },
       { id: 'a2', title: '连续阅读 100 天', date: iso(shift(TODAY, -71)), source: '习惯', note: '从三分钟热度到每天睡前半小时。' },
@@ -310,11 +383,11 @@
     return {
       v: 1,
       meta: { demo: true, seedDate: k },
-      tasks, projects, goals, habits, wishes, trivia, achievements, routines, hobbies, trash: [],
+      tasks, projects, goals, habits, wishes, trivia, achievements, routines, hobbies, memos, trash: [],
       ui: {
         route: 'today', cursor: k, taskView: 'day', habitTab: 'build', routineTab: 'all',
         goalId: 'g22', expanded: { g1: false, g2: true, g22: true, g12: true, g13: true, g3: true },
-        focusDone: {}, calMonth: null, triviaDay: k
+        focusDone: {}, calMonth: null, triviaDay: k, memoId: 'mn1'
       }
     };
   }
@@ -334,6 +407,7 @@
   if (!Array.isArray(S.trash)) S.trash = [];
   if (!Array.isArray(S.routines)) S.routines = [];
   if (!Array.isArray(S.hobbies)) S.hobbies = [];
+  if (!Array.isArray(S.memos)) S.memos = [];
   S.routines.forEach(r => { if (!Array.isArray(r.logs)) r.logs = []; });
   S.hobbies.forEach(h => { if (!Array.isArray(h.logs)) h.logs = []; });
   if (!S.ui) S.ui = {};
@@ -346,7 +420,7 @@
 
   const BACKUP_FORMAT = 'mercury-plan-backup';
   const BACKUP_VERSION = 1;
-  const BACKUP_ARRAYS = ['tasks', 'projects', 'goals', 'habits', 'wishes', 'trivia', 'achievements', 'routines', 'hobbies', 'trash'];
+  const BACKUP_ARRAYS = ['tasks', 'projects', 'goals', 'habits', 'wishes', 'trivia', 'achievements', 'routines', 'hobbies', 'memos', 'trash'];
 
   function createBackup() {
     return {
@@ -431,6 +505,7 @@
       // 老备份里没有日常记录 / 兴趣爱好，补成空数组，别让校验把人拦在门外
       if (payload.data && !Array.isArray(payload.data.routines)) payload.data.routines = [];
       if (payload.data && !Array.isArray(payload.data.hobbies)) payload.data.hobbies = [];
+      if (payload.data && !Array.isArray(payload.data.memos)) payload.data.memos = [];
       validateBackup(payload);
       const imported = clone(payload.data);
       imported.routines.forEach(r => { if (!Array.isArray(r.logs)) r.logs = []; });
@@ -602,6 +677,7 @@
       // 老备份补齐字段，和本地导入保持一致
       if (payload.data && !Array.isArray(payload.data.routines)) payload.data.routines = [];
       if (payload.data && !Array.isArray(payload.data.hobbies)) payload.data.hobbies = [];
+      if (payload.data && !Array.isArray(payload.data.memos)) payload.data.memos = [];
       validateBackup(payload);
       const imported = clone(payload.data);
       imported.routines.forEach(r => { if (!Array.isArray(r.logs)) r.logs = []; });
@@ -688,7 +764,7 @@
   // 删除都走这里：进回收站 → 可撤销 → 设置里还能「恢复删除」
   const TRASH_LIMIT = 40;
   const clone = o => (typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
-  const KIND_LABEL = { task: '待办', trivia: '琐事', goal: '目标', project: '项目', habit: '习惯', wish: '心愿', achievement: '成就', routine: '日常', hobby: '兴趣' };
+  const KIND_LABEL = { task: '待办', trivia: '琐事', goal: '目标', project: '项目', habit: '习惯', wish: '心愿', achievement: '成就', routine: '日常', hobby: '兴趣', memo: '备忘录' };
 
   // 记下「这个节点在树里的位置」，形如 [{ title: '根目标' }, { title: '子目标' }, ...]
   // 用标题而不是 id，是因为删除后 id 就已失效，恢复时要靠路径一层层找回来
@@ -745,6 +821,7 @@
     habit: e => putBack(S.habits, e.items.habits[0], e.idx),
     routine: e => putBack(S.routines, e.items.routines[0], e.idx),
     hobby: e => putBack(S.hobbies, e.items.hobbies[0], e.idx),
+    memo: e => putBack(S.memos, e.items.memos[0], e.idx),
     project: e => {
       putBack(S.projects, e.items.projects[0], e.idx);
       const p = e.items.projects[0];
@@ -825,6 +902,17 @@
     pushTrash(entry);
     save(); render(false);
     toast('已删除成就记录', '撤销', () => { undoTrash(entry.id); render(false); toast('已撤销'); });
+  }
+
+  function delMemo(id) {
+    const m = S.memos.find(x => x.id === id);
+    if (!m) return;
+    const entry = { id: uid('r'), kind: 'memo', title: m.title || '未命名笔记', count: 1, meta: (m.updated || '').slice(0, 10), idx: S.memos.indexOf(m), items: { memos: [m] } };
+    S.memos.splice(entry.idx, 1);
+    pushTrash(entry);
+    if (S.ui.memoId === id) S.ui.memoId = (S.memos[0] || {}).id || null;
+    save(); render(false);
+    toast('已删除笔记', '撤销', () => { undoTrash(entry.id); render(false); toast('已撤销删除'); });
   }
 
   // 目标：连同所有子孙一起删；由它排出来的待办保留，只解除关联
@@ -1121,7 +1209,7 @@
   const NAV = [
     { group: '每日', items: [{ id: 'today', label: '今日总览', icon: 'sun' }] },
     { group: '规划', items: [{ id: 'tasks', label: '日程待办', icon: 'cal' }, { id: 'goals', label: '目标拆解', icon: 'target' }, { id: 'projects', label: '我的项目', icon: 'layers' }] },
-    { group: '记录', items: [{ id: 'routines', label: '日常记录', icon: 'cycle' }, { id: 'habits', label: '习惯', icon: 'repeat' }, { id: 'hobbies', label: '兴趣爱好', icon: 'heart' }, { id: 'wishes', label: '心愿清单', icon: 'star' }, { id: 'trivia', label: '琐事记录', icon: 'pen' }, { id: 'achievements', label: '成就', icon: 'trophy' }] }
+    { group: '记录', items: [{ id: 'routines', label: '日常记录', icon: 'cycle' }, { id: 'habits', label: '习惯', icon: 'repeat' }, { id: 'hobbies', label: '兴趣爱好', icon: 'heart' }, { id: 'wishes', label: '心愿清单', icon: 'star' }, { id: 'memos', label: '备忘录', icon: 'note' }, { id: 'trivia', label: '琐事记录', icon: 'pen' }, { id: 'achievements', label: '成就', icon: 'trophy' }] }
   ];
 
   function navExtra(id) {
@@ -1144,6 +1232,7 @@
       const n = routinesDue(0).length;
       return n ? String(n) : '';
     }
+    if (id === 'memos') return S.memos.length ? String(S.memos.length) : '';
     return '';
   }
 
@@ -1259,6 +1348,7 @@
       case 'habits': return viewHabits();
       case 'wishes': return viewWishes();
       case 'trivia': return viewTrivia();
+      case 'memos': return viewMemos();
       case 'achievements': return viewAchievements();
       default: return viewToday();
     }
@@ -1875,6 +1965,225 @@
     return h;
   }
 
+  // ---------- 备忘录 ----------
+  // 一个够用的小 Markdown 渲染器：标题、列表、待办、引用、代码、表格、分割线、常用行内样式
+  function mdInline(src) {
+    let s = esc(src);
+    const codes = [];
+    s = s.replace(/`([^`]+)`/g, (m, c) => {
+      codes.push(`<code>${c}</code>`);
+      return `\u0001${codes.length - 1}\u0001`;
+    });
+    s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (m, alt, url) =>
+      /^(https?:|data:image\/)/i.test(url) ? `<img src="${url}" alt="${alt}" loading="lazy">` : m);
+    s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, url) =>
+      /^(https?:|mailto:|#|\/)/i.test(url) ? `<a href="${url}" target="_blank" rel="noreferrer">${txt}</a>` : m);
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+    s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+    s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+    s = s.replace(/==([^=]+)==/g, '<mark>$1</mark>');
+    s = s.replace(/\u0001(\d+)\u0001/g, (m, i) => codes[Number(i)] || '');
+    return s;
+  }
+
+  const MD_BLOCK = /^\s*(```|#{1,6}\s|>|[-*+]\s|\d+[.)]\s|([-*_])\s*(\2\s*){2,}\s*$|\|)/;
+
+  function mdCells(row) {
+    return row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+  }
+
+  function mdToHTML(src) {
+    const lines = String(src || '').replace(/\r\n?/g, '\n').split('\n');
+    const out = [];
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (!line.trim()) { i++; continue; }
+
+      const fence = line.match(/^\s*```(\w*)\s*$/);
+      if (fence) {
+        const buf = [];
+        i++;
+        while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) { buf.push(lines[i]); i++; }
+        i++;
+        out.push(`<pre class="md-pre"><code>${esc(buf.join('\n'))}</code></pre>`);
+        continue;
+      }
+
+      const hm = line.match(/^\s*(#{1,6})\s+(.*?)\s*#*\s*$/);
+      if (hm) {
+        const lv = hm[1].length;
+        out.push(`<h${lv}>${mdInline(hm[2])}</h${lv}>`);
+        i++;
+        continue;
+      }
+
+      if (/^\s*([-*_])\s*(\1\s*){2,}$/.test(line)) { out.push('<hr>'); i++; continue; }
+
+      if (/^\s*\|/.test(line) && i + 1 < lines.length && /^[\s:|-]+$/.test(lines[i + 1]) && lines[i + 1].indexOf('-') >= 0) {
+        const head = mdCells(line);
+        const aligns = mdCells(lines[i + 1]).map(c =>
+          /^:-+:$/.test(c) ? 'center' : /^-+:$/.test(c) ? 'right' : 'left');
+        i += 2;
+        const rows = [];
+        while (i < lines.length && /^\s*\|/.test(lines[i])) { rows.push(mdCells(lines[i])); i++; }
+        const th = head.map((c, x) => `<th style="text-align:${aligns[x] || 'left'}">${mdInline(c)}</th>`).join('');
+        const tb = rows.map(r => `<tr>${r.map((c, x) => `<td style="text-align:${aligns[x] || 'left'}">${mdInline(c)}</td>`).join('')}</tr>`).join('');
+        out.push(`<div class="md-table"><table><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table></div>`);
+        continue;
+      }
+
+      if (/^\s*>/.test(line)) {
+        const buf = [];
+        while (i < lines.length && /^\s*>/.test(lines[i])) { buf.push(lines[i].replace(/^\s*>\s?/, '')); i++; }
+        out.push(`<blockquote>${mdToHTML(buf.join('\n'))}</blockquote>`);
+        continue;
+      }
+
+      if (/^\s*([-*+]|\d+[.)])\s+/.test(line)) {
+        const baseIndent = line.match(/^\s*/)[0].length;
+        const ordered = /^\s*\d+[.)]\s+/.test(line);
+        const items = [];
+        while (i < lines.length) {
+          const m = lines[i].match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
+          if (!m) {
+            if (lines[i].trim() && /^\s{2,}/.test(lines[i]) && items.length) {
+              items[items.length - 1].text += ' ' + lines[i].trim();
+              i++;
+              continue;
+            }
+            break;
+          }
+          if (m[1].length < baseIndent) break;
+          items.push({ level: Math.min(2, Math.floor((m[1].length - baseIndent) / 2)), text: m[3] });
+          i++;
+        }
+        const lis = items.map(it => {
+          const pad = it.level ? ` style="margin-left:${it.level * 18}px"` : '';
+          const task = it.text.match(/^\[( |x|X)\]\s+(.*)$/);
+          if (task) {
+            return `<li class="md-task${task[1] === ' ' ? '' : ' done'}"${pad}><span class="md-box"></span><span>${mdInline(task[2])}</span></li>`;
+          }
+          return `<li${pad}>${mdInline(it.text)}</li>`;
+        }).join('');
+        out.push(ordered ? `<ol>${lis}</ol>` : `<ul>${lis}</ul>`);
+        continue;
+      }
+
+      const buf = [];
+      while (i < lines.length && lines[i].trim() && !MD_BLOCK.test(lines[i])) { buf.push(lines[i]); i++; }
+      out.push(`<p>${buf.map(mdInline).join('<br>')}</p>`);
+    }
+    return out.join('\n');
+  }
+
+  function memoById(id) { return S.memos.find(m => m.id === id); }
+
+  function memoTime(v) {
+    if (!v) return '';
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return '';
+    const k = iso(d);
+    const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    if (k === TODAY_K) return `今天 ${hm}`;
+    if (k === iso(shift(TODAY, -1))) return `昨天 ${hm}`;
+    const y = d.getFullYear() === TODAY.getFullYear() ? '' : d.getFullYear() + '年';
+    return `${y}${d.getMonth() + 1}月${d.getDate()}日`;
+  }
+
+  function memoExcerpt(s) {
+    return String(s || '')
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/[#>*_`~|]/g, ' ')
+      .replace(/^\s*[-+]\s*/gm, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 64);
+  }
+
+  function memoWords(s) { return String(s || '').replace(/\s/g, '').length; }
+
+  function viewMemos() {
+    const list = S.memos.slice().sort((a, b) => String(b.updated || '').localeCompare(String(a.updated || '')));
+    if (list.length && !list.some(m => m.id === S.ui.memoId)) S.ui.memoId = list[0].id;
+    const cur = list.find(m => m.id === S.ui.memoId) || null;
+
+    let h = `<div class="page-head">
+      <div>
+        <h1 class="page-title">备忘录</h1>
+        <div class="page-sub"><span>${list.length} 篇笔记</span><span class="dot-sep"></span><span>用 Markdown 写，右边即时排版</span></div>
+      </div>
+      <div class="page-actions"><button class="btn btn-amber" data-act="memo-new">${icon('plus', 14)} 新建笔记</button></div>
+    </div>`;
+
+    if (!list.length) {
+      return h + `<div class="card card-empty" style="padding:64px 20px">
+        <div style="margin-bottom:10px;color:var(--text-3)">${icon('note', 26)}</div>
+        还没有笔记。<br>点右上角「新建笔记」，第一行写 <b># 标题</b> 就能开始。
+      </div>`;
+    }
+
+    h += `<div class="memo-layout"><section class="card memo-side"><div class="memo-list">`;
+    list.forEach(m => {
+      h += `<div class="memo-item ${cur && m.id === cur.id ? 'on' : ''}" data-act="memo-open" data-id="${m.id}">
+        <h4>${esc(m.title || '未命名笔记')}</h4>
+        <p>${esc(memoExcerpt(m.content)) || '空笔记'}</p>
+        <span class="m-time">${memoTime(m.updated)}</span>
+      </div>`;
+    });
+    h += `</div></section>`;
+
+    h += `<section class="card memo-paper">
+      <div class="memo-doc-head">
+        <div style="min-width:0">
+          <h2>${esc(cur.title || '未命名笔记')}</h2>
+          <div class="memo-meta"><span>${memoTime(cur.updated)}</span><span class="dot-sep"></span><span>${memoWords(cur.content)} 字</span></div>
+        </div>
+        <div class="memo-ops">
+          <button class="btn sm" data-act="memo-edit" data-id="${cur.id}">${icon('pen', 13)} 编辑</button>
+          <button class="btn sm" data-act="memo-del" data-id="${cur.id}" title="删除这篇笔记">${icon('trash', 13)}</button>
+        </div>
+      </div>
+      <article class="md-body">${mdToHTML(cur.content) || '<p class="muted">这篇还是空的，点「编辑」写点什么。</p>'}</article>
+    </section></div>`;
+    return h;
+  }
+
+  function openMemoEditor(id) {
+    const m = id ? memoById(id) : null;
+    openModal(`<div class="modal memo-modal" style="position:relative">
+      <button class="icon-btn modal-close" data-act="m-close">${icon('x', 16)}</button>
+      <h3>${m ? '编辑笔记' : '新建笔记'}</h3>
+      <div class="m-sub">支持 Markdown：# 标题、- 列表、- [ ] 待办、&gt; 引用、\`代码\`、| 表格 |</div>
+      <input class="input" id="memoTitle" placeholder="笔记标题" value="${esc(m ? m.title : '')}" autocomplete="off">
+      <div class="memo-edit-split">
+        <textarea class="input mono" id="memoBody" spellcheck="false" placeholder="# 从这里开始写…">${esc(m ? m.content : '')}</textarea>
+        <div class="memo-preview md-body" id="memoPreview"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" data-act="m-close">取消</button>
+        <button class="btn btn-amber" data-act="memo-save" data-id="${m ? m.id : ''}">${m ? '保存' : '创建'}</button>
+      </div>
+    </div>`);
+    const body = document.getElementById('memoBody');
+    const prev = document.getElementById('memoPreview');
+    const paint = () => {
+      prev.innerHTML = mdToHTML(body.value) || '<p class="memo-ph">左边写，这里实时预览。</p>';
+    };
+    body.addEventListener('input', paint);
+    body.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        const btn = document.querySelector('#modalLayer [data-act="memo-save"]');
+        if (btn) btn.click();
+      }
+    });
+    paint();
+  }
+
   // ---------- 日常记录 ----------
   // 到期状态 → 徽标文案；d.state: over / today / soon / later / none
   function nextBadge(d, hasLog) {
@@ -2205,7 +2514,8 @@
         <div class="dh-kicker">${isQuit ? '戒除习惯' : '养成习惯'}</div>
         <h2>${esc(hb.name)}</h2>
       </div>
-      <button class="icon-btn" data-act="drawer-close">${icon('x', 16)}</button>
+      <button class="icon-btn" data-act="habit-edit" data-id="${hb.id}" title="编辑这个习惯">${icon('pen', 16)}</button>
+      <button class="icon-btn" data-act="drawer-close" title="关闭">${icon('x', 16)}</button>
     </div><div class="drawer-body">`;
 
     h += `<div class="flex" style="align-items:flex-end;gap:8px;margin-bottom:2px">
@@ -2252,7 +2562,10 @@
 
     if (hb.note) h += `<div class="drawer-section"><h4>备注</h4><div class="muted" style="font-size:12px;line-height:1.7">${esc(hb.note)}</div></div>`;
     h += `<div class="drawer-section" style="margin-bottom:0">
-      <button class="btn btn-danger" data-act="habit-del" data-id="${hb.id}">${icon('trash', 14)} 删除这个习惯</button>
+      <div class="flex gap8">
+        <button class="btn" data-act="habit-edit" data-id="${hb.id}">${icon('pen', 13)} 编辑</button>
+        <button class="btn btn-danger" data-act="habit-del" data-id="${hb.id}">${icon('trash', 14)} 删除这个习惯</button>
+      </div>
     </div>`;
     h += `</div>`;
     openDrawer(h);
@@ -2491,6 +2804,18 @@
        <button class="btn btn-amber" data-act="habit-create">创建</button>`));
   }
 
+  function openHabitEditor(id) {
+    const hb = habitById(id);
+    if (!hb) return;
+    const isQuit = hb.kind === 'quit';
+    openModal(modalShell('编辑习惯', isQuit ? '可以改名字和备注。养成 / 戒除的类型不能改，要换类型只能删掉重建。' : '改名字、每天目标次数或备注。已经打过的卡不会丢。',
+      `<div class="field"><label>名称</label><input class="input" id="ehName" value="${esc(hb.name)}" placeholder="例：早起 6:30"></div>
+       ${isQuit ? '' : `<div class="field"><label>每天目标次数（喝水这类量化习惯填 8，普通习惯填 1）</label><input class="input" id="ehTarget" type="number" min="1" max="99" value="${hb.target || 1}"></div>`}
+       <div class="field"><label>备注（可选）</label><textarea class="input" id="ehNote" rows="2" placeholder="为什么想养成 / 戒掉它">${esc(hb.note || '')}</textarea></div>`,
+      `<button class="btn btn-ghost" data-act="m-close">取消</button>
+       <button class="btn btn-amber" data-act="habit-save" data-id="${hb.id}">保存</button>`));
+  }
+
   function openNewWish() {
     openModal(modalShell('新心愿', '想要的东西，不丢人。',
       `<div class="field"><label>名称</label><input class="input" id="nwName" placeholder="例：一台 3D 打印机"></div>
@@ -2638,7 +2963,8 @@
       { label: '新建任务', icon: 'plus', hint: '', run: () => { go('tasks'); setTimeout(() => { const el = document.getElementById('taskAdd'); if (el) el.focus(); }, 40); } },
       { label: '新建习惯', icon: 'repeat', hint: '', run: openNewHabit },
       { label: '新建日常事项', icon: 'cycle', hint: '', run: openNewRoutine },
-      { label: '新建兴趣', icon: 'heart', hint: '', run: openNewHobby }
+      { label: '新建兴趣', icon: 'heart', hint: '', run: openNewHobby },
+      { label: '新建笔记', icon: 'note', hint: 'Markdown', run: () => openMemoEditor() }
     ]);
     palSel = 0;
     const layer = document.getElementById('modalLayer');
@@ -2667,6 +2993,7 @@
       { label: '新建习惯', icon: 'repeat', hint: '', run: openNewHabit },
       { label: '新建日常事项', icon: 'cycle', hint: '', run: openNewRoutine },
       { label: '新建兴趣', icon: 'heart', hint: '', run: openNewHobby },
+      { label: '新建笔记', icon: 'note', hint: 'Markdown', run: () => openMemoEditor() },
       { label: '回收站', icon: 'trash', hint: '恢复删除', run: openTrash }
     ]);
   };
@@ -2835,6 +3162,46 @@
         break;
       }
       case 'note-del': delTrivia(id); break;
+
+      case 'memo-new': openMemoEditor(); break;
+      case 'memo-open':
+        if (S.ui.memoId === id) break;
+        S.ui.memoId = id; save(); render(false); break;
+      case 'memo-edit': openMemoEditor(id); break;
+      case 'memo-del': {
+        const memo = memoById(id);
+        if (!memo) break;
+        askConfirm({
+          title: `删除笔记「${memo.title || '未命名笔记'}」？`,
+          detail: '删掉后可以在回收站恢复，内容不会丢。',
+          okText: '删除',
+          onOk: () => delMemo(id)
+        });
+        break;
+      }
+      case 'memo-save': {
+        const title = ((document.getElementById('memoTitle') || {}).value || '').trim();
+        const content = (document.getElementById('memoBody') || {}).value || '';
+        if (!title && !content.trim()) { toast('写点内容再保存'); break; }
+        const now = new Date().toISOString();
+        if (id) {
+          const memo = memoById(id);
+          if (!memo) break;
+          memo.title = title || '未命名笔记';
+          memo.content = content;
+          memo.updated = now;
+          S.ui.memoId = memo.id;
+          toast('笔记已保存');
+        } else {
+          const memo = { id: uid('mn'), title: title || '未命名笔记', content, created: now, updated: now };
+          S.memos.push(memo);
+          S.ui.memoId = memo.id;
+          toast('笔记已创建');
+        }
+        S.ui.route = 'memos';
+        save(); closeModal(); render(true);
+        break;
+      }
       case 'goto-notes': go('trivia'); break;
       case 'goto-routines': go('routines'); break;
       case 'clean-done': {
@@ -3230,6 +3597,23 @@
         break;
       }
 
+      case 'habit-edit': openHabitEditor(id); break;
+      case 'habit-save': {
+        const hb = habitById(id);
+        if (!hb) break;
+        const nameEl = document.getElementById('ehName');
+        const name = (nameEl ? nameEl.value : '') || '';
+        if (!name.trim()) { toast('名字不能为空'); break; }
+        hb.name = name.trim();
+        const tg = document.getElementById('ehTarget');
+        if (tg) hb.target = clamp(Number(tg.value) || 1, 1, 99);
+        const nt = document.getElementById('ehNote');
+        if (nt) hb.note = nt.value.trim();
+        save(); closeModal(); render(false);
+        if (document.getElementById('drawer').classList.contains('open')) drawerHabit(hb.id);
+        toast('已保存');
+        break;
+      }
       case 'habit-create': {
         const name = (document.getElementById('nhName') || {}).value || '';
         if (!name.trim()) break;
@@ -3424,6 +3808,7 @@
   }
   if (qs.get('modal') === 'summary') setTimeout(openSummary, 60);
   if (qs.get('modal') === 'capture') setTimeout(openCapture, 60);
+  if (qs.get('modal') === 'memo') setTimeout(() => openMemoEditor(qs.get('id') || null), 60);
 
 
 })();
