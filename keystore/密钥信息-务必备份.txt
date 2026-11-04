@@ -1,0 +1,11 @@
+水星计划 Android 签名密钥（务必整份另存备份，丢了无法覆盖升级！）
+
+密钥库文件 : E:////Mercury_Plan_Android////keystore////mercury-plan-release.keystore
+storePassword : 4BHiM7tiS26OXM0f6YZ7fIT5
+keyAlias      : mercury-plan
+keyPassword   : 4BHiM7tiS26OXM0f6YZ7fIT5
+算法          : RSA 2048，有效期至 2056 年（10950 天）
+证书 SHA-256  : 7a3a6afb2b5272e1832bd30507c350d12a1eafdfcad97ccde5a4176e000cb966
+
+备份建议：把本文件 + keystore 文件一起存到网盘/私密位置。
+（此目录已被 .gitignore 排除，不会被提交进 git）

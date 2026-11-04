@@ -1,0 +1,45 @@
+{
+  "format": "mercury-plan-backup",
+  "version": 1,
+  "exportedAt": "2026-11-04T15:10:13.175Z",
+  "app": "水星计划",
+  "data": {
+    "v": 2,
+    "meta": {
+      "demo": true,
+      "seedDate": "2026-11-04"
+    },
+    "tasks": [],
+    "projects": [],
+    "goals": [],
+    "habits": [],
+    "wishes": [],
+    "trivia": [],
+    "achievements": [],
+    "routines": [],
+    "hobbies": [],
+    "memos": [],
+    "trash": [],
+    "ui": {
+      "route": "today",
+      "cursor": "2026-11-04",
+      "taskView": "day",
+      "habitTab": "build",
+      "routineTab": "all",
+      "goalId": "g22",
+      "expanded": {
+        "g1": false,
+        "g2": true,
+        "g22": true,
+        "g12": true,
+        "g13": true,
+        "g3": true
+      },
+      "focusDone": {},
+      "calMonth": null,
+      "triviaDay": "2026-11-04",
+      "memoId": "mn1"
+    }
+  },
+  "theme": "graphite"
+}

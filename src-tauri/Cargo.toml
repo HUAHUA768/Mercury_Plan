@@ -1,0 +1,32 @@
+[package]
+name = "mercury-plan"
+version = "0.1.0"
+description = "水星计划桌面应用"
+authors = ["Mercury Plan"]
+edition = "2021"
+
+[lib]
+name = "mercury_plan_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+ureq = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# rfd 不支持 Android，必须做 target 隔离
+[target.'cfg(not(target_os = "android"))'.dependencies]
+rfd = "0.16"
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+codegen-units = 1
+panic = "abort"
