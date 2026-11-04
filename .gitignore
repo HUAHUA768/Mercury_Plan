@@ -112,3 +112,6 @@ $RECYCLE.BIN/
 
 # Historical repository backups
 *.bundle
+
+# WorkBuddy workspace data
+/.workbuddy/
