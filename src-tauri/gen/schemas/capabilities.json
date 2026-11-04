@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"水星计划默认权限：核心 + 文件对话框 + 文本读写","local":true,"windows":["main"],"permissions":["core:default","dialog:default","fs:allow-read-text-file","fs:allow-write-text-file","fs:allow-write-file",{"identifier":"fs:scope","allow":[{"path":"$DOWNLOAD/**"},{"path":"$DOCUMENT/**"}]}]}}
