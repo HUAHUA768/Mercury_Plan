@@ -130,6 +130,13 @@ npx tauri icon assets\icon-256.png -o icons
 
 环境变量 `ANDROID_HOME`、`NDK_HOME` 需指向 SDK/NDK 目录。
 
+### Windows 需要开启「开发人员模式」
+
+首次执行 `tauri android init` / 构建时，Tauri 会在 `src-tauri/gen/android/` 下创建**符号链接**，而 Windows 默认只允许管理员创建符号链接，普通用户会得到「权限拒绝」。解决办法二选一：
+
+- **设置 → 系统 → 开发者选项 → 打开「开发人员模式」**（推荐，一次开启永久生效；构建完成后如担心安全可关闭，下次构建再打开即可）
+- 或改用**管理员身份**运行终端执行构建
+
 ### 构建命令
 
 ```powershell
@@ -162,6 +169,7 @@ adb install -r "src-tauri/gen/android/app/build/outputs/apk/universal/release/ap
 - release 包使用项目自有的签名密钥，之后所有版本都用同一把密钥才能覆盖升级；**密钥丢失则无法升级**，只能卸载重装（本地数据会丢，请先导出备份）
 - 从 debug 包切换到 release 包（或反过来）签名不同，必须先卸载再安装
 - 签名配置在 [`src-tauri/gen/android/keystore.properties`](./src-tauri/gen/android/keystore.properties)，密钥库文件在 [`keystore/`](./keystore)（含「密钥信息-务必备份.txt」），两者均已被 `.gitignore` 排除，不会提交进 Git
+- 用 adb 安装/调试需在手机上开启「开发者选项 → USB 调试」；日常使用建议调试完后关闭开发者选项和 USB 调试，降低安全风险
 
 ### 国网络环境注意
 
