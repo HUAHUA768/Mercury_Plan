@@ -397,6 +397,20 @@
     };
   }
 
+  // 空数据：清空本机后按云端内容重建（?empty=1 时用），不带演示数据
+  function emptyState() {
+    return {
+      v: 2,
+      meta: { tomb: {}, ut: 0 },
+      tasks: [], projects: [], goals: [], habits: [], wishes: [], trivia: [], achievements: [],
+      routines: [], hobbies: [], memos: [], trash: [],
+      ui: {
+        route: 'today', cursor: TODAY_K, taskView: 'day', habitTab: 'build', routineTab: 'all',
+        goalId: null, expanded: {}, focusDone: {}, calMonth: null, triviaDay: TODAY_K, memoId: null
+      }
+    };
+  }
+
   // ---------- 状态 ----------
   let S;
   try {
@@ -406,7 +420,7 @@
     if (S && S.meta && S.meta.demo && S.meta.seedDate !== TODAY_K) S = null;
     if (S && !S.tasks) S = null;
   } catch (e) { S = null; }
-  if (!S) S = seed();
+  if (!S) S = location.search.indexOf('empty') >= 0 ? emptyState() : seed();
 
   // 旧版本（没有回收站 / 没有日常记录）的数据升级一下，不丢东西
   if (!Array.isArray(S.trash)) S.trash = [];
@@ -632,6 +646,25 @@
     const invoke = window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke;
     if (!invoke) return Promise.reject(new Error('桌面功能不可用，请重新构建应用'));
     return invoke(cmd, args);
+  }
+
+  // 测试用：清空本机数据。opt.empty=true → 以空数据重启，让自动同步从云端整份拉回；
+  // 否则重载成演示数据，并关掉自动同步（不关的话几秒后云端数据又会被合并回来）。
+  // 账号、主题、云端文件都不动。
+  function wipeLocal(opt) {
+    const o = opt || {};
+    try {
+      localStorage.removeItem(KEY);
+      localStorage.removeItem(SYNC_MARK_KEY);
+      localStorage.removeItem(SYNC_BEFORE_KEY);
+      localStorage.removeItem('mercury.sync.at');
+    } catch (e) { /* 忽略 */ }
+    const cfg = cloudCfg();
+    cfg.autoSync = o.empty ? true : false;
+    delete cfg.lastSyncError;
+    saveCloudCfg(cfg);
+    if (o.empty) location.href = location.pathname + '?empty=1';
+    else location.reload();
   }
 
   function readCloudInputs() {
@@ -3536,6 +3569,13 @@
        </div>
        <div class="muted backup-hint">备份包含全部用户数据和当前主题；导入会覆盖现有数据。</div>
        <div class="hr"></div>
+       <div class="set-label">切换数据源（测试用）</div>
+       <div class="set-actions" style="margin-top:0">
+         <button class="btn" data-act="wipe-demo">${icon('restore', 14)}载入演示数据</button>
+         <button class="btn" data-act="wipe-pull">${icon('db', 14)}从云端重建</button>
+       </div>
+       <div class="muted backup-hint">「载入演示数据」清空本机后回到演示数据，并关闭自动同步，云端不动；「从云端重建」清空本机后以空数据启动，自动同步把云端内容整份拉回来——测试完回到真实数据用这个。账号和主题会保留。</div>
+       <div class="hr"></div>
        <div class="set-label">多设备同步（坚果云）</div>
        <input class="input" id="jdUser" placeholder="坚果云账号（注册邮箱）" value="${esc(jd.user || '')}" style="margin-bottom:8px">
        <input class="input" id="jdPass" type="password" placeholder="${jd.pass ? '应用密码已保存，可输入新密码替换' : '应用密码（不是登录密码）'}" style="margin-bottom:10px">
@@ -3565,8 +3605,7 @@
        </button>
        <div class="hr"></div>
        <div class="muted" style="font-size:11px;line-height:1.7">这是用于确认交互的原型，数据仅用于演示。正式版会换成本地数据库并自动备份。<br>删除操作都有撤销：按 <span class="kbd">Ctrl Z</span>，或者到回收站里恢复。</div>`,
-      `<button class="btn btn-danger" data-act="reset-ask">重置演示数据</button>
-       <button class="btn" data-act="m-close">关闭</button>`));
+      `<button class="btn" data-act="m-close">关闭</button>`));
   }
 
   // ---------- 命令面板 ----------
@@ -4330,12 +4369,20 @@
         save(); closeModal(); render(false); toast('项目已创建');
         break;
       }
-      case 'reset-ask':
+      case 'wipe-demo':
         askConfirm({
-          title: '重置演示数据？',
-          detail: '当前所有内容会被清空，回到最初的样子。这一步不能撤销。',
-          okText: '确认重置',
-          onOk: () => { try { localStorage.removeItem(KEY); } catch (err) { } location.reload(); }
+          title: '清空本机数据，载入演示数据？',
+          detail: '本机全部内容、回收站、同步标记都会清掉，并关闭自动同步（不关的话几秒后云端数据又会被合并回来）。坚果云上的文件不受影响，账号和主题保留。',
+          okText: '清空并载入',
+          onOk: () => wipeLocal({ empty: false })
+        });
+        break;
+      case 'wipe-pull':
+        askConfirm({
+          title: '清空本机，从云端重建？',
+          detail: '本机全部内容和同步标记会清掉，然后以空数据启动，自动同步把云端内容整份拉回来。当前的测试数据不会留下。',
+          okText: '清空并拉回',
+          onOk: () => wipeLocal({ empty: true })
         });
         break;
 
