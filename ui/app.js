@@ -3399,14 +3399,17 @@
   }
 
   // ---------- 弹层 ----------
-  function openModal(html) {
+  function openModal(html, opts) {
     const layer = document.getElementById('modalLayer');
     const wasOpen = !layer.hidden;
     layer.innerHTML = html;
     layer.hidden = false;
     layer.onclick = e => { if (e.target === layer) closeModal(); };
-    const inp = layer.querySelector('input,textarea');
-    if (inp) setTimeout(() => inp.focus(), 40);
+    // 设置页这类"打开即读"的弹窗不要抢焦点，否则手机上会立刻弹键盘
+    if (!opts || opts.focus !== false) {
+      const inp = layer.querySelector('input,textarea');
+      if (inp) setTimeout(() => inp.focus(), 40);
+    }
     if (!wasOpen) { modalPushed = true; pushLayer(() => { modalPushed = false; closeModal(); }); }
   }
   function closeModal() {
@@ -3686,7 +3689,7 @@
        <div class="muted" style="font-size:11px;line-height:1.7">这是用于确认交互的原型，数据仅用于演示。正式版会换成本地数据库并自动备份。<br>删除操作都有撤销：按 <span class="kbd">Ctrl Z</span>，或者到回收站里恢复。</div>
        <div class="muted" style="font-size:11px;opacity:.75;margin-top:10px">版本 v${esc(APP_VER || '—')}</div>`,
       `<button class="btn btn-danger" data-act="reset-ask">重置演示数据</button>
-       <button class="btn" data-act="m-close">关闭</button>`));
+       <button class="btn" data-act="m-close">关闭</button>`), { focus: false });
   }
 
   // ---------- 命令面板 ----------
