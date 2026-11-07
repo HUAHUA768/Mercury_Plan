@@ -544,6 +544,9 @@ svg{display:block}
 .sb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
 .sb-local{display:flex;align-items:center;gap:6px}
 .sb-local i{width:5px;height:5px;border-radius:50%;background:var(--green);opacity:.8}
+.sb-local.warn i{background:#E9A33C}
+.sb-local.err i{background:#E5714B}
+.sb-local.ok i{background:#6FBF9B}
 
 /* ============ 通用列表 / 表单 ============ */
 .field{margin-bottom:13px}
@@ -725,6 +728,21 @@ svg{display:block}
 .wish-price{font-size:12px;color:var(--text-2);margin-top:6px;font-variant-numeric:tabular-nums}
 .wish-note{font-size:11px;color:var(--text-3);margin-top:5px;flex:1}
 .wish-foot{display:flex;align-items:center;gap:8px;margin-top:12px}
+/* 心愿子项：卡片里直接拆步骤，勾掉一步就离它更近一步 */
+.wish-items{margin-top:9px}
+.wish-items-head{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text-3);letter-spacing:.04em;margin-bottom:3px}
+.wish-items-head .mono{font-variant-numeric:tabular-nums}
+.wish-item{display:flex;align-items:center;gap:7px;padding:3px 4px;margin-left:-4px;border-radius:6px;font-size:11.5px;color:var(--text-2);cursor:pointer;line-height:1.5}
+.wish-item:hover{background:var(--fill)}
+.wish-item-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wish-item.on .wish-item-t{color:var(--text-3);text-decoration:line-through;text-decoration-color:var(--strike)}
+.wish-item-x{flex:0 0 auto;width:18px;height:18px;display:grid;place-items:center;padding:0;border:0;background:transparent;color:var(--text-3);opacity:0;cursor:pointer;border-radius:4px;transition:.12s}
+.wish-item:hover .wish-item-x,.wish-item-x:focus-visible{opacity:.7}
+.wish-item-x:hover{opacity:1;color:var(--red-text-2);background:hsl(var(--red-hue) 64% 65% / .14)}
+@media (hover:none){.wish-item-x{opacity:.55}}
+.wish-add{display:flex;align-items:center;gap:6px;margin-top:7px}
+.wish-add-input{height:26px;font-size:11.5px;padding:0 8px;flex:1;min-width:0;border-radius:6px}
+.wish-add .btn{padding:0 8px}
 /* 「已实现」的卡片整体淡一点。不用 opacity，否则删除按钮也会跟着淡到看不见，
    改成只淡化卡片里的内容，轮廓和按钮保持正常 */
 .wish-card.is-done{background:color-mix(in srgb, var(--surface) 62%, transparent)}
@@ -732,11 +750,15 @@ svg{display:block}
 .wish-card.is-done > h3,
 .wish-card.is-done > .wish-price,
 .wish-card.is-done > .wish-note,
+.wish-card.is-done > .wish-items,
+.wish-card.is-done > .wish-add,
 .wish-card.is-done > .wish-foot{opacity:.62}
 .wish-card.is-done:hover > .wish-top,
 .wish-card.is-done:hover > h3,
 .wish-card.is-done:hover > .wish-price,
 .wish-card.is-done:hover > .wish-note,
+.wish-card.is-done:hover > .wish-items,
+.wish-card.is-done:hover > .wish-add,
 .wish-card.is-done:hover > .wish-foot{opacity:.85}
 
 /* ============ 琐事页 ============ */
@@ -883,6 +905,8 @@ svg{display:block}
 .qcard{padding-right:56px}
 /* 时间轴条目 */
 .tl-item .tl-x{position:absolute;right:0;top:-8px;width:40px;height:40px}
+/* 成就条目：编辑按钮放在删除按钮左边 */
+.tl-item .tl-x.tl-edit{right:40px}
 /* 目标子项：小按钮统一右对齐 */
 .sub-row .row-x{margin-left:-4px;margin-right:-6px}
 /* 子孙层级叠得深，行高只有 37px，按比例收一点 */
@@ -1101,6 +1125,12 @@ svg{display:block}
 .memo-item h4{font-size:12.5px;font-weight:500;margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
 .memo-item p{font-size:11px;color:var(--text-3);margin:0 0 5px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .memo-item .m-time{font-size:10px;color:var(--text-3);opacity:.85;font-variant-numeric:tabular-nums}
+.m-foot{display:flex;align-items:center;gap:6px}
+.sync-mark{display:inline-flex;align-items:center;justify-content:center;line-height:0;color:var(--text-3);opacity:.62;cursor:default}
+.sync-mark.done{opacity:.4}
+.sync-mark.pending{opacity:.9;color:hsl(var(--hue) 80% 57%)}
+.sync-mark.pending svg{animation:sync-spin 1.15s linear infinite}
+@keyframes sync-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 .memo-paper{padding:24px 28px 30px;min-height:440px}
 .memo-doc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px dashed var(--dash)}
 .memo-doc-head h2{font-size:19px;font-weight:600;margin:0 0 5px;letter-spacing:-.015em;line-height:1.35;word-break:break-word}

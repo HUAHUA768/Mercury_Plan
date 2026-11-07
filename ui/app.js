@@ -83,7 +83,9 @@
     camera: '<path d="M4.2 8.2h2.9l1.5-2.4h6.8l1.5 2.4h2.9a1.3 1.3 0 011.3 1.3v8a1.3 1.3 0 01-1.3 1.3H4.2a1.3 1.3 0 01-1.3-1.3v-8a1.3 1.3 0 011.3-1.3z"/><circle cx="12" cy="13.6" r="3.3"/>',
     music: '<path d="M9 18.2V5.8l11-2.2v12.6"/><circle cx="6.6" cy="18.2" r="2.4"/><circle cx="17.6" cy="16.2" r="2.4"/>',
     trash: '<path d="M4 6.6h16"/><path d="M9.4 6.6V4.7c0-.6.5-1.1 1.1-1.1h3c.6 0 1.1.5 1.1 1.1v1.9"/><path d="M6.2 6.6l.9 12.6c.06.9.8 1.6 1.7 1.6h6.4c.9 0 1.64-.7 1.7-1.6l.9-12.6"/><path d="M10.2 10.4v6.6M13.8 10.4v6.6"/>',
-    restore: '<path d="M3.4 11.6l8.6-7.4 8.6 7.4"/><path d="M5.9 10.2v9.2h12.2v-9.2"/><path d="M12 20.2v-6M9.4 16.4l2.6-2.6 2.6 2.6"/>'
+    restore: '<path d="M3.4 11.6l8.6-7.4 8.6 7.4"/><path d="M5.9 10.2v9.2h12.2v-9.2"/><path d="M12 20.2v-6M9.4 16.4l2.6-2.6 2.6 2.6"/>',
+    syncRing: '<path d="M20.6 12a8.6 8.6 0 11-3.1-6.6"/><path d="M17.6 2.4v3.8h-3.8"/>',
+    cloudCheck: '<path d="M7.2 18h9.4a3.6 3.6 0 00.5-7.2 5.2 5.2 0 00-9.9-1.3A3.7 3.7 0 007.2 18z"/><path d="M9.9 13.9l1.9 1.9 3.4-3.5"/>'
   };
   function icon(name, size) {
     return `<svg viewBox="0 0 24 24" width="${size || 18}" height="${size || 18}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${I[name] || ''}</svg>`;
@@ -211,12 +213,15 @@
     ];
 
     const wishes = [
-      { id: 'w1', name: '富士 X100VI 相机', price: 12990, want: 5, status: 'done', date: iso(shift(TODAY, -115)), note: '银色机身，配了一条皮背带。' },
-      { id: 'w2', name: 'Herman Miller Aeron 椅子', price: 8900, want: 5, status: 'want', note: '每天坐十个小时，值得。' },
-      { id: 'w3', name: '去冰岛看一次极光', price: 28000, want: 5, status: 'want', note: '计划 2027 年 2 月。' },
-      { id: 'w4', name: '学冲黑白胶片', price: 1200, want: 4, status: 'want', note: '先上完暗房课。' },
-      { id: 'w5', name: '一台 3D 打印机', price: 2499, want: 3, status: 'want', note: '' },
-      { id: 'w6', name: '换一副降噪耳机', price: 1999, want: 2, status: 'want', note: '' }
+      { id: 'w1', name: '富士 X100VI 相机', price: 12990, want: 5, status: 'done', date: iso(shift(TODAY, -115)), note: '银色机身，配了一条皮背带。',
+        items: [{ id: 'wi1', title: '去线下店摸一下手感', done: true }, { id: 'wi2', title: '存够 13000', done: true }, { id: 'wi3', title: '配皮背带', done: true }] },
+      { id: 'w2', name: 'Herman Miller Aeron 椅子', price: 8900, want: 5, status: 'want', note: '每天坐十个小时，值得。',
+        items: [{ id: 'wi4', title: '线下试坐 A/B/C 三种尺寸', done: true }, { id: 'wi5', title: '等双十一比价', done: false }] },
+      { id: 'w3', name: '去冰岛看一次极光', price: 28000, want: 5, status: 'want', note: '计划 2027 年 2 月。',
+        items: [{ id: 'wi6', title: '办申根签证', done: false }, { id: 'wi7', title: '查 2 月极光概率与路线', done: false }, { id: 'wi8', title: '攒够预算', done: false }] },
+      { id: 'w4', name: '学冲黑白胶片', price: 1200, want: 4, status: 'want', note: '先上完暗房课。', items: [] },
+      { id: 'w5', name: '一台 3D 打印机', price: 2499, want: 3, status: 'want', note: '', items: [] },
+      { id: 'w6', name: '换一副降噪耳机', price: 1999, want: 2, status: 'want', note: '', items: [] }
     ];
 
     // 日常记录：一件事反复做，每次追加一条「哪天做的 + 预计下次」
@@ -410,11 +415,91 @@
   if (!Array.isArray(S.memos)) S.memos = [];
   S.routines.forEach(r => { if (!Array.isArray(r.logs)) r.logs = []; });
   S.hobbies.forEach(h => { if (!Array.isArray(h.logs)) h.logs = []; });
+  S.wishes.forEach(w => { if (!Array.isArray(w.items)) w.items = []; });
   if (!S.ui) S.ui = {};
   if (!S.ui.routineTab) S.ui.routineTab = 'all';
   if (S.v !== 2) { S.v = 2; }
 
+  // ---------- 多设备同步：每条记录的修改时间 ----------
+  // 每条记录带一个 ut（修改时间戳），内存里带墓碑 tomb，合并时按条目取新、按墓碑删旧。
+  const SYNC_COLLECTIONS = ['tasks', 'projects', 'goals', 'habits', 'wishes', 'trivia', 'achievements', 'routines', 'hobbies', 'memos', 'trash'];
+
+  if (!S.meta || typeof S.meta !== 'object') S.meta = {};
+  if (!S.meta.tomb || typeof S.meta.tomb !== 'object') S.meta.tomb = {};
+  if (!S.meta.deviceId) S.meta.deviceId = 'dev-' + Math.random().toString(36).slice(2, 10);
+
+  let maxSeenUt = 0;
+  (function scanMaxUt() {
+    SYNC_COLLECTIONS.forEach(coll => (S[coll] || []).forEach(it => {
+      if (it && Number(it.ut) > maxSeenUt) maxSeenUt = Number(it.ut);
+    }));
+    Object.keys(S.meta.tomb).forEach(k => { if (Number(S.meta.tomb[k]) > maxSeenUt) maxSeenUt = Number(S.meta.tomb[k]); });
+  })();
+
+  function nextUt() {
+    const t = Math.max(Date.now(), maxSeenUt + 1);
+    maxSeenUt = t;
+    return t;
+  }
+
+  function itemSig(item) {
+    const o = {};
+    Object.keys(item).forEach(k => { if (k !== 'ut') o[k] = item[k]; });
+    return JSON.stringify(o);
+  }
+
+  function indexState(state) {
+    const map = {};
+    SYNC_COLLECTIONS.forEach(coll => {
+      (state[coll] || []).forEach(it => {
+        if (!it || it.id == null) return;
+        map[coll + ':' + it.id] = itemSig(it);
+      });
+    });
+    return map;
+  }
+
+  // 老数据没有 ut，升级时统一补一个基准时间，之后每次改动只更新被改的那几条
+  (function stampLegacy() {
+    const t = nextUt();
+    let stamped = false;
+    SYNC_COLLECTIONS.forEach(coll => (S[coll] || []).forEach(it => {
+      if (it && it.ut == null) { it.ut = t; stamped = true; }
+    }));
+    if (stamped) { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 忽略 */ } }
+  })();
+
+  let syncBase = indexState(S);
+
+  // 保存时对比上一次落盘的快照，找出新增/修改/删除并打时间戳与墓碑
+  function stampChanges() {
+    const prev = syncBase;
+    const next = indexState(S);
+    const t = nextUt();
+    let changed = false;
+    SYNC_COLLECTIONS.forEach(coll => (S[coll] || []).forEach(it => {
+      if (!it || it.id == null) return;
+      const key = coll + ':' + it.id;
+      if (!prev || prev[key] !== next[key]) { it.ut = t; changed = true; }
+    }));
+    if (prev) {
+      Object.keys(prev).forEach(key => {
+        if (!next[key] && !S.meta.tomb[key]) { S.meta.tomb[key] = t; changed = true; }
+      });
+    }
+    syncBase = next;
+    if (changed) onLocalChange();
+  }
+
+  function onLocalChange() {
+    S.meta.ut = nextUt();
+    // 用户第一次真正改动后就不再是演示数据，也不再每天重置
+    if (S.meta.demo) { S.meta.demo = false; S.meta.seedDate = null; }
+    scheduleAutoSync();
+  }
+
   function save() {
+    try { stampChanges(); } catch (e) { /* 同步标记失败不影响保存 */ }
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 无痕模式等场景忽略 */ }
   }
 
@@ -633,6 +718,14 @@
     }
   }
 
+  // 坚果云 PROPFIND 返回的是 RFC1123（Thu, 06 Nov 2026 05:08:24 GMT），转成本地时间
+  function fmtDavTime(s) {
+    if (!s) return '';
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return '';
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
   function cloudNameToTime(name) {
     const m = name.match(/^mercury-plan-backup-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\.json$/);
     if (!m) return '';
@@ -655,12 +748,15 @@
     files = (files || []).sort((a, b) => (a.name < b.name ? 1 : -1));
     const rows = files.map(f => {
       const t = cloudNameToTime(f.name);
-      const label = t || (f.name === 'latest.json' ? '最新一份（固定入口）' : esc(f.name));
+      const isSync = f.name === 'sync.json';
+      const label = t || (isSync ? 'sync.json（实时同步文件）' : (f.name === 'latest.json' ? '最新一份（固定入口）' : esc(f.name)));
+      const meta = [esc(fmtCloudSize(f.size)), fmtDavTime(f.modified) ? `${isSync ? '更新于' : ''}${fmtDavTime(f.modified)}`.trim() : ''].filter(Boolean).join(' · ');
       return `<div class="cloud-row">
-        <span class="cloud-name"><b>${label}</b><span>${esc(fmtCloudSize(f.size))}</span></span>
+        <span class="cloud-name"><b>${label}</b><span>${meta}</span></span>
         <span class="cloud-ops">
-          <button class="btn" data-act="jd-restore" data-id="${esc(f.name)}">恢复</button>
-          <button class="btn" data-act="jd-del" data-id="${esc(f.name)}">删除</button>
+          <button class="btn sm" data-act="jd-merge" data-id="${esc(f.name)}">合并</button>
+          <button class="btn sm" data-act="jd-restore" data-id="${esc(f.name)}">覆盖</button>
+          <button class="btn sm" data-act="jd-del" data-id="${esc(f.name)}">删除</button>
         </span>
       </div>`;
     }).join('');
@@ -720,6 +816,421 @@
     });
   }
 
+  // ---------- 多设备同步（按条目合并，不覆盖整包） ----------
+  const SYNC_FILE = 'sync.json';
+  const SYNC_FORMAT = 'mercury-plan-sync';
+  const SYNC_BEFORE_KEY = 'mercury.sync.before';
+  const SYNC_GAP = 20000;        // 两次自动同步之间的最小间隔
+  const SYNC_DEBOUNCE = 6000;    // 改动停下多久后自动上传
+  // 墓碑容差：另一台设备把已删条目重新打了时间戳（ut 比墓碑稍微新一点）时，
+  // 不能当成「更新」收回来，否则这条会永远删不掉。墓碑后 10 分钟内一律按删除处理。
+  const TOMB_GRACE = 10 * 60 * 1000;
+  let syncTimer = null;
+  let syncReady = false;
+  let syncing = false;
+  let syncPending = false;
+  let syncLoopTimer = null;
+  let lastCatchUpAt = 0;
+  let catchUpInstalled = false;
+
+  function autoSyncOn() {
+    const cfg = cloudCfg();
+    return cfg.autoSync !== false && !!cfg.user && !!cfg.pass;
+  }
+
+  function errText(e) { return typeof e === 'string' ? e : (e && e.message) || ''; }
+
+  function syncParams() {
+    const cfg = cloudCfg();
+    if (!cfg.user) throw new Error('请先填写坚果云账号（注册邮箱）');
+    if (!cfg.pass) throw new Error('请先填写坚果云应用密码');
+    return { cfg, base: { server: CLOUD_SERVER, username: cfg.user, password: cfg.pass, folder: CLOUD_FOLDER } };
+  }
+
+  function pruneTomb(tomb) {
+    const limit = Date.now() - 180 * 86400000;
+    const out = {};
+    Object.keys(tomb || {}).forEach(k => { if (Number(tomb[k]) >= limit) out[k] = tomb[k]; });
+    return out;
+  }
+
+  // 习惯打卡取两边较多次数，日常记录按 id 并集，避免整条覆盖时丢掉另一台设备的记录
+  function unionCounts(a, b) {
+    const out = { ...(b || {}) };
+    Object.keys(a || {}).forEach(k => {
+      out[k] = Math.max(Number(a[k]) || 0, Number(out[k]) || 0);
+    });
+    return out;
+  }
+
+  function unionById(a, b) {
+    const list = Array.isArray(b) ? b.slice() : [];
+    const seen = new Set(list.map(x => x && x.id));
+    (Array.isArray(a) ? a : []).forEach(x => { if (x && !seen.has(x.id)) { seen.add(x.id); list.push(x); } });
+    return list;
+  }
+
+  function mergeItem(coll, local, remote) {
+    const lu = Number(local.ut) || 0;
+    const ru = Number(remote.ut) || 0;
+    const pick = lu > ru ? local : (ru > lu ? remote : local);
+    if (coll === 'habits') return { ...pick, checks: unionCounts(local.checks, remote.checks) };
+    if (coll === 'routines') return { ...pick, logs: unionById(local.logs, remote.logs) };
+    if (coll === 'wishes') return { ...pick, items: unionById(local.items, remote.items) };
+    if (coll === 'hobbies') return { ...pick, logs: unionById(local.logs, remote.logs) };
+    return pick;
+  }
+
+  // 合并两份数据：同 id 取 ut 新的，各自独有的条目都保留，墓碑时间晚于记录则视为删除
+  function mergeStates(localS, remoteS) {
+    const stats = { added: 0, updated: 0, deleted: 0, bumped: 0 };
+    const tomb = { ...((localS.meta && localS.meta.tomb) || {}) };
+    const rTomb = (remoteS && remoteS.meta && remoteS.meta.tomb) || {};
+    Object.keys(rTomb).forEach(k => { if (!tomb[k] || rTomb[k] > tomb[k]) tomb[k] = rTomb[k]; });
+
+    const removedHere = []; // 本机有、被远端墓碑删掉的条目
+
+    const out = {};
+    SYNC_COLLECTIONS.forEach(coll => {
+      const lmap = new Map();
+      const rmap = new Map();
+      (localS[coll] || []).forEach(it => { if (it && it.id != null) lmap.set(it.id, it); });
+      (((remoteS && remoteS[coll]) || [])).forEach(it => { if (it && it.id != null) rmap.set(it.id, it); });
+      const ids = new Set([...lmap.keys(), ...rmap.keys()]);
+      const list = [];
+      ids.forEach(id => {
+        const l = lmap.get(id);
+        const r = rmap.get(id);
+        let item;
+        if (l && r) {
+          item = mergeItem(coll, l, r);
+          if (itemSig(l) !== itemSig(r)) stats.updated++;
+        } else if (l) {
+          item = l;
+        } else {
+          item = r;
+          stats.added++;
+        }
+        const t = tomb[coll + ':' + id] || 0;
+        const ut = Number(item.ut) || 0;
+        if (t && (t >= ut || (ut - t <= TOMB_GRACE && !item.rv))) {
+          stats.deleted++;
+          // 墓碑推进到条目之后：否则对方每次同步都把这条当「更新」送回来，永远删不干净
+          const nx = Math.max(t, ut + 1);
+          if (nx > t) { tomb[coll + ':' + id] = nx; stats.bumped++; }
+          if (l && coll !== 'trash') removedHere.push({ coll, item });
+          return;
+        }
+        list.push(item);
+      });
+      out[coll] = list;
+    });
+
+    // 被远端删掉的内容在回收站留一条，误删还能捡回来
+    if (removedHere.length) {
+      const have = new Set();
+      (out.trash || []).forEach(e => trashSourceKeys(e).forEach(k => have.add(k)));
+      const extra = [];
+      removedHere.forEach(x => {
+        const key = x.coll + ':' + x.item.id;
+        if (have.has(key)) return;   // 已经有同一内容的回收站记录
+        have.add(key);
+        const it = x.item;
+        extra.push({
+          id: 'rt-' + x.coll + '-' + it.id,   // 固定 id，保证反复同步不会重复入站
+          kind: TRASH_KIND[x.coll] || x.coll,
+          title: it.title || it.text || it.name || '未命名',
+          count: 1,
+          meta: it.date || it.time || '',
+          at: Date.now(),
+          ut: nextUt(),
+          items: { [x.coll]: [it] }
+        });
+      });
+      if (extra.length) out.trash = extra.concat(out.trash || []);
+    }
+
+    // 同一条内容只留一条回收站记录（优先留手动删除的那条）
+    if (Array.isArray(out.trash) && out.trash.length) {
+      const realKeys = new Set();
+      out.trash.forEach(e => {
+        if (!/^rt-/.test(String(e.id))) trashSourceKeys(e).forEach(k => realKeys.add(k));
+      });
+      out.trash = out.trash.filter(e =>
+        !/^rt-/.test(String(e.id)) || !trashSourceKeys(e).some(k => realKeys.has(k)));
+    }
+
+    out.v = localS.v;
+    out.ui = localS.ui;
+    out.meta = { ...(localS.meta || {}), tomb: pruneTomb(tomb) };
+    const lu = Number(localS.meta && localS.meta.ut) || 0;
+    const ru = Number(remoteS && remoteS.meta && remoteS.meta.ut) || 0;
+    out.meta.ut = Math.max(lu, ru);
+    // 让本机后续产生的 ut 高于已知墓碑，恢复/编辑才能真正盖过删除
+    Object.keys(out.meta.tomb).forEach(k => {
+      const v = Number(out.meta.tomb[k]) || 0;
+      if (v > maxSeenUt) maxSeenUt = v;
+    });
+    return { state: out, stats };
+  }
+
+  function dataSig(state) {
+    return JSON.stringify(SYNC_COLLECTIONS.map(c => (state[c] || []).map(itemSig)));
+  }
+
+  // 重绘时避开正在输入的框，防止同步把光标顶掉
+  function safeRender(left) {
+    const remain = left == null ? 6 : left;
+    const ae = document.activeElement;
+    const editing = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable);
+    if (editing && remain > 0) { setTimeout(() => safeRender(remain - 1), 1500); return; }
+    render(true);
+  }
+
+  function syncPayload() {
+    return {
+      format: SYNC_FORMAT,
+      version: 1,
+      app: '水星计划',
+      updatedAt: new Date().toISOString(),
+      deviceId: S.meta.deviceId,
+      data: S
+    };
+  }
+
+  // ---------- 同步状态标记：记录「哪条内容已经传上云」 ----------
+  const SYNC_MARK_KEY = 'mercury.sync.marks';
+  let lastFailAt = 0;
+
+  function loadMarks() {
+    try { return JSON.parse(localStorage.getItem(SYNC_MARK_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+
+  function markAllSynced(state) {
+    const marks = {};
+    SYNC_COLLECTIONS.forEach(coll => (state[coll] || []).forEach(it => {
+      if (it && it.id != null) marks[coll + ':' + it.id] = Number(it.ut) || 0;
+    }));
+    marks.__at = Date.now();
+    try { localStorage.setItem(SYNC_MARK_KEY, JSON.stringify(marks)); } catch (e) { /* 忽略 */ }
+  }
+
+  function isSynced(coll, item) {
+    if (!item || item.id == null) return false;
+    const marks = loadMarks();
+    return (Number(marks[coll + ':' + item.id]) || 0) >= (Number(item.ut) || 0);
+  }
+
+  // 列表里的同步状态：待上传转圈，已上传显示云勾；没配账号就不显示
+  function syncMark(coll, item) {
+    const cfg = cloudCfg();
+    if (!cfg.user || !cfg.pass) return '';
+    if (isSynced(coll, item)) {
+      return `<span class="sync-mark done" title="已同步到云端">${icon('cloudCheck', 11)}</span>`;
+    }
+    return `<span class="sync-mark pending" title="等待同步到云端">${icon('syncRing', 11)}</span>`;
+  }
+
+  // 自动同步失败时也给个提示，同一分钟内只提示一次
+  function syncFailNote(e) {
+    const now = Date.now();
+    if (now - lastFailAt < 60000) return;
+    lastFailAt = now;
+    toast(`<b>云端同步失败</b>：${esc(errText(e) || '未知错误')}`);
+  }
+
+  function syncStatusText(cfg) {
+    if (cfg.lastSyncError) return `上次同步失败：${cfg.lastSyncError.msg}`;
+    return `上次同步：${fmtCloudTime(cfg.lastSyncAt)}`;
+  }
+
+  function updateSyncLabels() {
+    const cfg = cloudCfg();
+    const a = document.getElementById('jdSyncLast');
+    if (a) a.textContent = syncStatusText(cfg);
+    const b = document.getElementById('jdAutoState');
+    if (b) b.textContent = cfg.autoSync === false ? '已关闭' : '已开启';
+    const c = document.getElementById('jdLast');
+    if (c) c.textContent = `上次云备份：${fmtCloudTime(cfg.lastBackupAt)}`;
+    updateSyncBadge();
+  }
+
+  // 拉取云端 → 与本机按条目合并 → 写回本机 → 把合并结果传回云端
+  async function syncNow(opts) {
+    const o = opts || {};
+    if (o.silent && S.meta && S.meta.demo) return null; // 演示数据不上传
+    let cfg, base;
+    try { ({ cfg, base } = syncParams()); } catch (e) { if (!o.silent) toast(esc(e.message)); return null; }
+    if (syncing) { syncPending = true; return null; }
+    syncing = true;
+    const btn = document.getElementById(o.btnId || 'jdSync');
+    if (btn) { btn.disabled = true; btn.dataset.orig = btn.innerHTML; btn.innerHTML = esc('同步中…'); }
+
+    let result = null;
+    try {
+      let remote = null;
+      let first = false;
+      try {
+        const raw = await tauriInvoke('webdav_download', { ...base, filename: SYNC_FILE });
+        const payload = JSON.parse(raw);
+        if (payload && payload.format === SYNC_FORMAT && payload.data) remote = payload.data;
+      } catch (e) {
+        if (/不存在|404/.test(errText(e))) first = true;
+        else throw e;
+      }
+
+      let stats = { added: 0, updated: 0, deleted: 0 };
+      let touched = false;
+      if (remote) {
+        const merged = mergeStates(S, remote);
+        stats = merged.stats;
+        // bumped：墓碑被推进了（对方把已删条目当成更新送回来），必须落盘并上传，否则对方会一直送
+        touched = merged.stats.bumped > 0 || dataSig(merged.state) !== dataSig(S);
+        if (touched) {
+          try { localStorage.setItem(SYNC_BEFORE_KEY, JSON.stringify(S)); } catch (e) { /* 存不下就算了 */ }
+          S = merged.state;
+          syncBase = indexState(S);
+          try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 忽略 */ }
+        }
+      }
+
+      // 本机没有待上传、合并也没带来变化时不必重复上传，省掉一次云端写
+      const needUpload = first || !remote || touched || pendingSyncCount() > 0;
+      if (needUpload) {
+        await tauriInvoke('webdav_upload', { ...base, filename: SYNC_FILE, content: JSON.stringify(syncPayload()) });
+        markAllSynced(S);
+      }
+      cfg.lastSyncAt = new Date().toISOString();
+      delete cfg.lastSyncError;
+      saveCloudCfg(cfg);
+      try { localStorage.setItem('mercury.sync.at', String(Date.now())); } catch (e) { /* 忽略 */ }
+      if (touched || S.ui.route === 'memos') safeRender();
+      updateSyncLabels();
+      result = stats;
+
+      if (!o.silent) {
+        const parts = [];
+        if (stats.added) parts.push(`补入 ${stats.added} 条`);
+        if (stats.deleted) parts.push(`删除 ${stats.deleted} 条`);
+        if (stats.updated) parts.push(`更新 ${stats.updated} 条`);
+        if (parts.length) toast(`已同步 · ${parts.join('，')}`);
+        else toast(first ? '已创建云端同步库' : '两端已经一致');
+      }
+    } catch (e) {
+      if (!o.silent) cloudFail(e, '同步失败');
+      else { console.warn('[sync]', e); syncFailNote(e); }
+      try {
+        const c = cloudCfg();
+        c.lastSyncError = { at: Date.now(), msg: errText(e) || '未知错误' };
+        saveCloudCfg(c);
+      } catch (err) { /* 忽略 */ }
+      updateSyncLabels();
+    } finally {
+      syncing = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.orig || '同步云端';
+        delete btn.dataset.orig;
+      }
+      if (syncPending) { syncPending = false; scheduleAutoSync(3000); }
+    }
+    return result;
+  }
+
+  function scheduleAutoSync(delay) {
+    if (!syncReady || !autoSyncOn()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+      if (syncing) { syncPending = true; return; }
+      const last = Number(localStorage.getItem('mercury.sync.at') || 0);
+      const wait = SYNC_GAP - (Date.now() - last);
+      if (wait > 0) { scheduleAutoSync(wait + 500); return; }
+      if (S.meta && S.meta.demo) return; // 演示数据不上传
+      syncNow({ silent: true });
+    }, delay == null ? SYNC_DEBOUNCE : delay);
+  }
+
+  // 兜底轮询：可见时 60 秒、隐藏时 3 分钟。
+  // 注意：这里只用 visibilityState 决定「间隔」，绝不用它决定「拉不拉」——
+  // Windows 的 WebView2 在窗口被遮挡时会长期停在 hidden，拿它做开关会彻底停止拉取。
+  function startSyncLoop() {
+    clearTimeout(syncLoopTimer);
+    const step = () => {
+      const hidden = document.visibilityState === 'hidden';
+      syncLoopTimer = setTimeout(() => {
+        if (autoSyncOn()) syncNow({ silent: true });
+        step();
+      }, hidden ? 180000 : 60000);
+    };
+    step();
+  }
+
+  // 窗口被遮挡/最小化时定时器会被节流，回到前台时补一次
+  function catchUpSync() {
+    if (!autoSyncOn() || syncing) return;
+    const now = Date.now();
+    if (now - lastCatchUpAt < 45000) return;      // 防止连续点击反复请求
+    const last = Number(localStorage.getItem('mercury.sync.at') || 0);
+    if (now - last < 60000) return;               // 刚同步过，不必再拉
+    lastCatchUpAt = now;
+    syncNow({ silent: true });
+  }
+
+  function installCatchUp() {
+    if (catchUpInstalled) return;
+    catchUpInstalled = true;
+    ['focus', 'pointerdown', 'keydown'].forEach(ev =>
+      window.addEventListener(ev, catchUpSync, { passive: true }));
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') catchUpSync();
+    });
+  }
+
+  function toggleAutoSync() {
+    const cfg = cloudCfg();
+    cfg.autoSync = cfg.autoSync === false;
+    saveCloudCfg(cfg);
+    updateSyncLabels();
+    toast(cfg.autoSync === false ? '已关闭自动同步' : '已开启自动同步，改动后会自动上传');
+    if (cfg.autoSync !== false) { scheduleAutoSync(2000); installCatchUp(); }
+  }
+
+  // 手动挑一份云端备份与当前数据合并（不覆盖本机独有的内容）
+  async function cloudMerge(file) {
+    let cfg, base;
+    try { ({ cfg, base } = syncParams()); } catch (e) { toast(esc(e.message)); return; }
+    let payload;
+    try {
+      const raw = await tauriInvoke('webdav_download', { ...base, filename: file });
+      payload = JSON.parse(raw);
+    } catch (e) {
+      cloudFail(e, '读取云端备份失败');
+      return;
+    }
+    const remote = payload && payload.data ? payload.data : payload;
+    if (!remote || typeof remote !== 'object' || !Array.isArray(remote.tasks)) { toast('这份云端文件无法合并'); return; }
+    const merged = mergeStates(S, remote);
+    const st = merged.stats;
+    askConfirm({
+      title: '合并云端备份到本机？',
+      heading: '同步确认',
+      danger: false,
+      detail: `按条目合并：云端独有 ${st.added} 条会补进本机，本机独有的一条不丢，同一内容以较新的改动为准。合并结果会同时写回云端。`,
+      okText: '合并',
+      onOk: () => {
+        const touched = dataSig(merged.state) !== dataSig(S);
+        try { localStorage.setItem(SYNC_BEFORE_KEY, JSON.stringify(S)); } catch (e) { /* 忽略 */ }
+        S = merged.state;
+        syncBase = indexState(S);
+        save();
+        closeModal();
+        safeRender();
+        toast(touched ? `已合并 · 补入 ${st.added} 条` : '本机已包含云端全部内容');
+        syncNow({ silent: true });
+      }
+    });
+  }
+
   function openCloudHelp() {
     openModal(modalShell('获取坚果云应用密码', '应用密码不是登录密码，是专门给第三方应用用的一串独立密码。',
       `<ol class="help-steps">
@@ -766,6 +1277,25 @@
   const clone = o => (typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
   const KIND_LABEL = { task: '待办', trivia: '琐事', goal: '目标', project: '项目', habit: '习惯', wish: '心愿', achievement: '成就', routine: '日常', hobby: '兴趣', memo: '备忘录' };
 
+  // 一条回收站记录涉及哪些原始条目，形如 ['tasks:t1', 'goals:g3']
+  function trashSourceKeys(entry) {
+    const items = (entry && entry.items) || {};
+    const keys = [];
+    Object.keys(items).forEach(k => {
+      if (k === 'unlinked' || k === 'count') return;
+      (Array.isArray(items[k]) ? items[k] : []).forEach(x => {
+        if (x && x.id != null) keys.push(k + ':' + x.id);
+      });
+    });
+    return keys;
+  }
+
+  // 集合名 → 回收站的 kind 值，必须与 KIND_LABEL / undoMap 的键一致
+  const TRASH_KIND = {
+    tasks: 'task', projects: 'project', goals: 'goal', habits: 'habit', wishes: 'wish',
+    trivia: 'trivia', achievements: 'achievement', routines: 'routine', hobbies: 'hobby', memos: 'memo'
+  };
+
   // 记下「这个节点在树里的位置」，形如 [{ title: '根目标' }, { title: '子目标' }, ...]
   // 用标题而不是 id，是因为删除后 id 就已失效，恢复时要靠路径一层层找回来
   function goalPathSnap(id) {
@@ -784,6 +1314,15 @@
     S.trash.splice(S.trash.indexOf(entry), 1);
     const fn = undoMap[entry.kind];
     if (fn) fn(entry);
+    // 恢复出来的条目要清掉自己的墓碑，并把 ut 推到墓碑之后，否则会被墓碑（包括别的设备的）再删一次
+    trashSourceKeys(entry).forEach(k => {
+      const cut = k.indexOf(':');
+      const coll = k.slice(0, cut);
+      const iid = k.slice(cut + 1);
+      delete S.meta.tomb[k];
+      const it = (S[coll] || []).find(x => x && String(x.id) === iid);
+      if (it) { it.ut = nextUt(); it.rv = 1; }
+    });
     save();
     return true;
   }
@@ -1269,9 +1808,40 @@
     </div>`;
   }
 
+  function pendingSyncCount() {
+    const cfg = cloudCfg();
+    if (!cfg.user || !cfg.pass) return -1; // 没配账号 = 没开启
+    const marks = loadMarks();
+    let n = 0;
+    SYNC_COLLECTIONS.forEach(coll => (S[coll] || []).forEach(it => {
+      if (!it || it.id == null) return;
+      if ((Number(marks[coll + ':' + it.id]) || 0) < (Number(it.ut) || 0)) n++;
+    }));
+    return n;
+  }
+
+  // 状态栏右侧的同步提示：只在同步结束后局部刷新，不整页重绘
+  function syncBadge() {
+    const pend = pendingSyncCount();
+    const cfg = cloudCfg();
+    if (pend < 0) return { cls: '', text: '数据保存在本机' };
+    if (cfg.lastSyncError) return { cls: 'err', text: '云端同步失败' };
+    return pend ? { cls: 'warn', text: `${pend} 条待上传` } : { cls: 'ok', text: '云端已同步' };
+  }
+
+  function updateSyncBadge() {
+    const el = document.querySelector('#statusbar .sb-local');
+    if (!el) return;
+    const b = syncBadge();
+    el.className = 'sb-local' + (b.cls ? ' ' + b.cls : '');
+    el.title = b.text;
+    el.innerHTML = `<i></i>${esc(b.text)}`;
+  }
+
   function statusHTML() {
     const st = statsOn(S.ui.cursor);
     const quit = S.habits.filter(h => h.kind === 'quit').sort((a, b) => quitStreak(b) - quitStreak(a))[0];
+    const badge = syncBadge();
     return `<div class="stat"><b>${st.taskDone}/${st.taskTotal}</b> 待办</div>
       <span class="dot-sep"></span>
       <div class="stat"><b>${st.habitDone}/${st.habitTotal}</b> 习惯</div>
@@ -1280,7 +1850,7 @@
       <span class="dot-sep"></span>
       <div class="stat"><b>${st.notes}</b> 条琐事</div>
       <div class="sb-right">
-        <span class="sb-local"><i></i>数据保存在本机</span>
+        <span class="sb-local ${badge.cls}" title="${esc(badge.text)}"><i></i>${esc(badge.text)}</span>
         <button class="btn sm" data-act="summary">今日小结</button>
       </div>`;
   }
@@ -1846,13 +2416,38 @@
   }
 
   // ---------- 心愿 ----------
+  // 心愿下面还可以拆子项：拆到能马上动手那一步
+  function wishSubsHtml(w) {
+    const items = w.items || [];
+    let h = '';
+    if (items.length) {
+      const doneN = items.filter(i => i.done).length;
+      h += `<div class="wish-items">
+        <div class="wish-items-head"><span>子项</span><span class="mono">${doneN}/${items.length}</span></div>`;
+      items.forEach(it => {
+        h += `<div class="wish-item${it.done ? ' on' : ''}" data-act="wish-item-toggle" data-id="${w.id}" data-iid="${it.id}" title="${it.done ? '取消勾选' : '标记这一步做完'}">
+          <span class="check${it.done ? ' on' : ''}" style="width:14px;height:14px${it.done ? ';background:var(--amber);border-color:var(--amber)' : ''}">${icon('check', 9)}</span>
+          <span class="wish-item-t">${esc(it.title)}</span>
+          <button class="wish-item-x" data-act="wish-item-del" data-id="${w.id}" data-iid="${it.id}" title="删掉这一步">${icon('x', 12)}</button>
+        </div>`;
+      });
+      h += `</div>`;
+    }
+    h += `<div class="wish-add">
+      <input class="input wish-add-input" id="wi-${w.id}" placeholder="${items.length ? '再加一步…' : '拆一步，例：办签证'}">
+      <button class="btn sm" data-act="wish-item-add" data-id="${w.id}" title="添加子项">${icon('plus', 12)}</button>
+    </div>`;
+    return h;
+  }
+
   function viewWishes() {
     const want = S.wishes.filter(w => w.status === 'want').sort((a, b) => b.want - a.want);
     const done = S.wishes.filter(w => w.status === 'done');
+    const allItems = S.wishes.reduce((n, w) => n + (w.items || []).length, 0);
     let h = `<div class="page-head">
       <div>
         <h1 class="page-title">心愿清单</h1>
-        <div class="page-sub"><span>${want.length} 个想要</span><span class="dot-sep"></span><span>${done.length} 个已实现</span><span class="dot-sep"></span><span>合计 ¥${sum(want.map(w => w.price || 0)).toLocaleString()}</span></div>
+        <div class="page-sub"><span>${want.length} 个想要</span><span class="dot-sep"></span><span>${done.length} 个已实现</span><span class="dot-sep"></span><span>${allItems} 个待办子项</span><span class="dot-sep"></span><span>合计 ¥${sum(want.map(w => w.price || 0)).toLocaleString()}</span></div>
       </div>
       <div class="page-actions"><button class="btn" data-act="wish-new">${icon('plus', 14)} 新心愿</button></div>
     </div>`;
@@ -1868,6 +2463,7 @@
         <h3>${esc(w.name)}</h3>
         ${w.price ? `<div class="wish-price mono">¥${w.price.toLocaleString()}</div>` : ''}
         <div class="wish-note">${esc(w.note || '')}</div>
+        ${wishSubsHtml(w)}
         <div class="wish-foot">
           <button class="btn sm" data-act="wish-done" data-id="${w.id}">标记已实现</button>
         </div>
@@ -1884,6 +2480,7 @@
           <h3>${esc(w.name)}</h3>
           ${w.price ? `<div class="wish-price mono">¥${w.price.toLocaleString()}</div>` : ''}
           <div class="wish-note">${esc(w.note || '')}</div>
+          ${wishSubsHtml(w)}
           <div class="wish-foot"><span class="muted" style="font-size:10.5px">${w.date ? fmtMD(w.date) + ' 实现' : ''}</span></div>
         </article>`;
       });
@@ -2131,7 +2728,7 @@
       h += `<div class="memo-item ${cur && m.id === cur.id ? 'on' : ''}" data-act="memo-open" data-id="${m.id}">
         <h4>${esc(m.title || '未命名笔记')}</h4>
         <p>${esc(memoExcerpt(m.content)) || '空笔记'}</p>
-        <span class="m-time">${memoTime(m.updated)}</span>
+        <div class="m-foot"><span class="m-time">${memoTime(m.updated)}</span>${syncMark('memos', m)}</div>
       </div>`;
     });
     h += `</div></section>`;
@@ -2140,7 +2737,7 @@
       <div class="memo-doc-head">
         <div style="min-width:0">
           <h2>${esc(cur.title || '未命名笔记')}</h2>
-          <div class="memo-meta"><span>${memoTime(cur.updated)}</span><span class="dot-sep"></span><span>${memoWords(cur.content)} 字</span></div>
+          <div class="memo-meta"><span>${memoTime(cur.updated)}</span><span class="dot-sep"></span><span>${memoWords(cur.content)} 字</span>${syncMark('memos', cur)}</div>
         </div>
         <div class="memo-ops">
           <button class="btn sm" data-act="memo-edit" data-id="${cur.id}">${icon('pen', 13)} 编辑</button>
@@ -2296,6 +2893,7 @@
           <h3>${esc(a.title)}</h3>
           <div class="tl-meta"><span>${fmtFull(a.date)}</span><span class="chip">${esc(a.source)}</span></div>
           ${a.note ? `<div class="tl-note">${esc(a.note)}</div>` : ''}
+          <button class="row-x tl-x tl-edit" data-act="ach-edit" data-id="${a.id}" title="编辑这条成就">${icon('pen', 26)}</button>
           <button class="row-x tl-x" data-act="ach-del" data-id="${a.id}" title="删除这条成就">${icon('trash', 26)}</button>
         </div>`;
       });
@@ -2817,12 +3415,13 @@
   }
 
   function openNewWish() {
-    openModal(modalShell('新心愿', '想要的东西，不丢人。',
+    openModal(modalShell('新心愿', '想要的东西，不丢人。可以先拆成几步，做不到的时候也知道下一步做什么。',
       `<div class="field"><label>名称</label><input class="input" id="nwName" placeholder="例：一台 3D 打印机"></div>
        <div class="field"><label>预算（可留空）</label><input class="input" id="nwPrice" type="number" min="0" placeholder="2499"></div>
        <div class="field"><label>想要程度</label>
          <select class="input" id="nwWant"><option value="5">★★★★★ 想到睡不着</option><option value="4">★★★★ 很想要</option><option value="3" selected>★★★ 想要</option><option value="2">★★ 有点想</option><option value="1">★ 随缘</option></select>
-       </div>`,
+       </div>
+       <div class="field"><label>拆成几步（可选，一行一步）</label><textarea class="input" id="nwSteps" rows="3" placeholder="例：查评测&#10;看线下有没有现货&#10;攒够钱"></textarea></div>`,
       `<button class="btn btn-ghost" data-act="m-close">取消</button>
        <button class="btn btn-amber" data-act="wish-create">加入清单</button>`));
   }
@@ -2869,6 +3468,17 @@
        <div class="field"><label>想说的话（可选）</label><textarea class="input" id="naNote" rows="2"></textarea></div>`,
       `<button class="btn btn-ghost" data-act="m-close">取消</button>
        <button class="btn btn-amber" data-act="ach-create">记下来</button>`));
+  }
+
+  function openEditAch(id) {
+    const a = S.achievements.find(x => x.id === id);
+    if (!a) return;
+    openModal(modalShell('编辑这条成就', '改成你想记住的样子。',
+      `<div class="field"><label>做成了什么</label><input class="input" id="naTitle" value="${esc(a.title)}"></div>
+       <div class="field"><label>日期</label><input class="input" id="naDate" type="date" value="${a.date}"></div>
+       <div class="field"><label>想说的话（可选）</label><textarea class="input" id="naNote" rows="2">${esc(a.note || '')}</textarea></div>`,
+      `<button class="btn btn-ghost" data-act="m-close">取消</button>
+       <button class="btn btn-amber" data-act="ach-save" data-id="${a.id}">保存</button>`));
   }
 
   function openNewGoal() {
@@ -2926,19 +3536,28 @@
        </div>
        <div class="muted backup-hint">备份包含全部用户数据和当前主题；导入会覆盖现有数据。</div>
        <div class="hr"></div>
-       <div class="set-label">坚果云云备份</div>
+       <div class="set-label">多设备同步（坚果云）</div>
        <input class="input" id="jdUser" placeholder="坚果云账号（注册邮箱）" value="${esc(jd.user || '')}" style="margin-bottom:8px">
        <input class="input" id="jdPass" type="password" placeholder="${jd.pass ? '应用密码已保存，可输入新密码替换' : '应用密码（不是登录密码）'}" style="margin-bottom:10px">
        <div class="set-actions" style="margin-top:0">
          <button class="btn" id="jdTest" data-act="jd-test">${icon('check', 14)}测试连接</button>
-         <button class="btn btn-amber" id="jdBackup" data-act="jd-backup">${icon('arrowUp', 14)}备份到坚果云</button>
+         <button class="btn btn-amber" id="jdSync" data-act="jd-sync">${icon('cycle', 14)}同步云端</button>
          <button class="btn" id="jdList" data-act="jd-list">${icon('db', 14)}云端记录</button>
        </div>
-       <div class="muted backup-hint">首次使用：登录坚果云网页版 → 账户信息 → 安全选项 → 添加应用密码。备份存放在坚果云的 /MercuryPlan/ 文件夹，账号和应用密码只保存在本机。</div>
+       <button class="set-row" data-act="jd-auto">
+         <span class="set-row-main">${icon('cycle', 15)}<span>自动同步</span></span>
+         <span class="set-row-side"><span id="jdAutoState">${jd.autoSync === false ? '已关闭' : '已开启'}</span>${icon('chevR', 14)}</span>
+       </button>
+       <button class="set-row" data-act="jd-backup">
+         <span class="set-row-main">${icon('arrowUp', 15)}<span>备份一份完整快照</span></span>
+         <span class="set-row-side" id="jdBackup">云端留存${icon('chevR', 14)}</span>
+       </button>
+       <div class="muted backup-hint">两端各记各的都不会丢：同步会把云端独有和本机独有的内容按条目合并，同一条以较新的改动为准。改完十几秒自动上传，打开应用时也会自动拉一次。</div>
        <button class="set-row" data-act="jd-help">
          <span class="set-row-main">${icon('restore', 15)}<span>如何获取坚果云应用密码？</span></span>
          <span class="set-row-side">查看教程${icon('chevR', 14)}</span>
        </button>
+       <div class="muted backup-hint" id="jdSyncLast">${syncStatusText(jd)}</div>
        <div class="muted backup-hint" id="jdLast">上次云备份：${fmtCloudTime(jd.lastBackupAt)}</div>
        <button class="set-row" data-act="trash-open">
          <span class="set-row-main">${icon('trash', 15)}<span>回收站</span></span>
@@ -3145,6 +3764,9 @@
       case 'jd-test': cloudTest(); break;
       case 'jd-backup': cloudBackup(); break;
       case 'jd-list': cloudList(); break;
+      case 'jd-sync': syncNow({ btnId: 'jdSync' }); break;
+      case 'jd-auto': toggleAutoSync(); break;
+      case 'jd-merge': cloudMerge(id); break;
       case 'jd-restore': cloudRestore(id); break;
       case 'jd-del': cloudDelete(id); break;
       case 'jd-help': openCloudHelp(); break;
@@ -3526,10 +4148,41 @@
       }
 
       case 'wish-new': openNewWish(); break;
+      case 'wish-item-add': {
+        const w = S.wishes.find(x => x.id === id);
+        if (!w) break;
+        const inp = document.getElementById(`wi-${id}`);
+        const title = ((inp && inp.value) || '').trim();
+        if (!title) { if (inp) inp.focus(); break; }
+        if (!Array.isArray(w.items)) w.items = [];
+        w.items.push({ id: uid('wi'), title, done: false });
+        save(); render(false);
+        const again = document.getElementById(`wi-${id}`);
+        if (again) again.focus();
+        break;
+      }
+      case 'wish-item-toggle': {
+        const w = S.wishes.find(x => x.id === id);
+        const it = w && (w.items || []).find(x => x.id === el.dataset.iid);
+        if (!it) break;
+        it.done = !it.done;
+        save(); render(false);
+        break;
+      }
+      case 'wish-item-del': {
+        const w = S.wishes.find(x => x.id === id);
+        if (!w || !Array.isArray(w.items)) break;
+        const it = w.items.find(x => x.id === el.dataset.iid);
+        w.items = w.items.filter(x => x.id !== el.dataset.iid);
+        save(); render(false);
+        if (it) toast(`已删掉子项 <b>${esc(it.title)}</b>`);
+        break;
+      }
       case 'wish-done': {
         const w = S.wishes.find(x => x.id === id);
         if (w) {
           w.status = 'done'; w.date = TODAY_K;
+          (w.items || []).forEach(it => { it.done = true; });
           S.achievements.push({ id: uid('a'), title: `实现心愿：${w.name}`, date: TODAY_K, source: '心愿', note: '' });
           save(); render(false);
           toast(`心愿实现：<b>${esc(w.name)}</b>，已记入成就`);
@@ -3537,6 +4190,7 @@
         break;
       }
       case 'ach-new': openNewAch(); break;
+      case 'ach-edit': openEditAch(id); break;
       case 'wish-del': {
         const w = S.wishes.find(x => x.id === id);
         if (!w) break;
@@ -3631,8 +4285,12 @@
         if (!name.trim()) break;
         const price = Number((document.getElementById('nwPrice') || {}).value || 0);
         const want = Number((document.getElementById('nwWant') || {}).value || 3);
-        S.wishes.push({ id: uid('w'), name: name.trim(), price, want, status: 'want', note: '' });
-        save(); closeModal(); render(false); toast('已加入心愿清单');
+        const steps = ((document.getElementById('nwSteps') || {}).value || '')
+          .split('\n').map(s => s.trim()).filter(Boolean)
+          .map(t => ({ id: uid('wi'), title: t, done: false }));
+        S.wishes.push({ id: uid('w'), name: name.trim(), price, want, status: 'want', note: '', items: steps });
+        save(); closeModal(); render(false);
+        toast(steps.length ? `已加入心愿清单，拆了 ${steps.length} 步` : '已加入心愿清单');
         break;
       }
       case 'ach-create': {
@@ -3642,6 +4300,17 @@
         const note = (document.getElementById('naNote') || {}).value || '';
         S.achievements.push({ id: uid('a'), title: title.trim(), date, source: '手动', note: note.trim() });
         save(); closeModal(); render(false); toast('记下了。');
+        break;
+      }
+      case 'ach-save': {
+        const a = S.achievements.find(x => x.id === id);
+        if (!a) break;
+        const t = (document.getElementById('naTitle') || {}).value || '';
+        if (!t.trim()) break;
+        a.title = t.trim();
+        a.date = (document.getElementById('naDate') || {}).value || a.date;
+        a.note = ((document.getElementById('naNote') || {}).value || '').trim();
+        save(); closeModal(); render(false); toast('已保存');
         break;
       }
       case 'goal-create': {
@@ -3748,6 +4417,18 @@
           if (el) el.focus();
         }
         e.preventDefault();
+      } else if (id.indexOf('wi-') === 0) {
+        const wid = id.slice(3);
+        const w = S.wishes.find(x => x.id === wid);
+        const title = e.target.value.trim();
+        if (w && title) {
+          if (!Array.isArray(w.items)) w.items = [];
+          w.items.push({ id: uid('wi'), title, done: false });
+          save(); render(false);
+          const el = document.getElementById(id);
+          if (el) el.focus();
+        }
+        e.preventDefault();
       }
     }
 
@@ -3809,6 +4490,14 @@
   if (qs.get('modal') === 'summary') setTimeout(openSummary, 60);
   if (qs.get('modal') === 'capture') setTimeout(openCapture, 60);
   if (qs.get('modal') === 'memo') setTimeout(() => openMemoEditor(qs.get('id') || null), 60);
+
+  // 同步：启动后拉一次云端，之后按可见性轮询；窗口一有动静就补拉
+  syncReady = true;
+  if (autoSyncOn()) {
+    setTimeout(() => syncNow({ silent: true }), 3000);
+    startSyncLoop();
+    installCatchUp();
+  }
 
 
 })();
