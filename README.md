@@ -110,7 +110,7 @@ npm run build
 构建产物：
 
 - 绿色版：`src-tauri/target/release/mercury-plan.exe`
-- NSIS 安装包：`src-tauri/target/release/bundle/nsis/水星计划_0.1.0_x64-setup.exe`
+- NSIS 安装包：`src-tauri/target/release/bundle/nsis/水星计划_0.2.2_x64-setup.exe`
 
 安装包使用 `currentUser` 模式，不要求管理员权限。应用图标由 [`assets/icon-256.png`](./assets/icon-256.png) 生成到 [`icons/`](./icons)，并编译进 exe：
 
@@ -127,11 +127,11 @@ npm install
 npm run build
 ```
 
-在 GitHub 的 **Releases** 页面创建与版本号一致的 Tag，例如 `v0.1.0`，并上传：
+在 GitHub 的 **Releases** 页面创建与版本号一致的 Tag，例如 `v0.2.2`，并上传：
 
 | 文件 | 用途 |
 | --- | --- |
-| `水星计划_0.1.0_x64-setup.exe` | 推荐下载的 Windows 安装包 |
+| `水星计划_0.2.2_x64-setup.exe` | 推荐下载的 Windows 安装包 |
 | `mercury-plan.exe` | 可选的免安装绿色版 |
 
 这两个文件位于 `src-tauri/target/release/` 及其 `bundle/nsis/` 子目录。`target/` 已被 `.gitignore` 忽略，因此发布文件应作为 Release 附件上传，不要提交到 Git 仓库。发布说明中建议写明版本变化、系统要求和已知问题。
