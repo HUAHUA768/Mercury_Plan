@@ -10,3 +10,6 @@ src-tauri/gen/android/local.properties
 .DS_Store
 keystore/
 .workbuddy/
+
+# 施工方案/设计文档留在本地
+/docs/
