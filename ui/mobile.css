@@ -15,11 +15,11 @@
   /* ---------- 侧栏 → 底部 tab 栏 ---------- */
   .sidebar {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto;
-    width: auto; height: 58px;
+    width: auto; height: 64px;
     padding: 0 0 env(safe-area-inset-bottom, 0px);
     display: flex; flex-direction: row; align-items: stretch;
     border-right: 0; border-top: 1px solid var(--line);
-    background: #10151A; /* 不透明：盖住底下的状态条（--side-b 是半透明的） */
+    background: var(--drawer-bg, #10151A); /* 跟随主题：各主题都定义了不透明的 --drawer-bg */
     z-index: 30;
   }
   .sidebar .brand { display: none; }
@@ -35,15 +35,18 @@
   .sidebar .nav-item {
     position: relative;
     flex: 1 1 0; min-width: 0; height: 100%;
-    flex-direction: column; justify-content: center; gap: 3px;
-    padding: 0 2px; border-radius: 10px;
+    flex-direction: column; justify-content: center; gap: 4px;
+    padding: 0 2px 6px; border-radius: 10px;
     font-size: 10.5px; letter-spacing: 0;
   }
   .sidebar .nav-item > span:not(.nav-extra) {
     max-width: 100%; overflow: hidden;
     text-overflow: ellipsis; white-space: nowrap;
   }
-  .sidebar .nav-item svg { width: 19px; height: 19px; }
+  .sidebar .nav-item svg { width: 38px; height: 38px; }
+  /* 仅图标模式：隐藏文字，图标自动居中占满整个格子 */
+  .sidebar.tab-icons .nav-item { padding-bottom: 0; gap: 0; }
+  .sidebar.tab-icons .nav-item > span:not(.nav-extra) { display: none; }
   .sidebar .nav-item.active { background: none; }
   .sidebar .nav-item.active::before {
     left: 9px; right: 9px; top: auto; bottom: 4px;
@@ -78,20 +81,32 @@
   .search-btn svg { flex: 0 0 auto; }
   .topbar .btn-amber { min-height: 38px; padding: 0 10px; font-size: 12.5px; }
 
-  .view { padding: 10px 12px calc(78px + env(safe-area-inset-bottom, 0px)); }
+  .view { padding: 10px 12px calc(102px + env(safe-area-inset-bottom, 0px)); }
   .page-head { margin-bottom: 14px; gap: 10px; }
   .page-title { font-size: 19px; }
   .page-actions { gap: 6px; }
 
+  /* 状态栏：手机上抬到 tab 栏上方（否则被固定 tab 栏整条盖住），只留同步状态和今日小结 */
   .statusbar {
-    height: 34px; padding: 0 12px; gap: 10px;
+    position: fixed; left: 0; right: 0;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    height: 32px; padding: 0 12px; gap: 10px; z-index: 29;
     font-size: 10.5px; overflow-x: auto; flex-wrap: nowrap;
+    background: var(--bottom-a); backdrop-filter: blur(8px);
     scrollbar-width: none;
   }
   .statusbar::-webkit-scrollbar { display: none; }
-  .sb-local { display: none; }
-  .sb-right { gap: 8px; }
+  .statusbar .stat, .statusbar .dot-sep { display: none; }
+  .sb-local { display: flex; white-space: nowrap; align-items: center; gap: 5px; }
+  .sb-right {
+    margin-left: auto; gap: 8px; position: sticky; right: 0; padding-left: 12px;
+    background: var(--bottom-a); backdrop-filter: blur(8px);
+  }
   .statusbar .btn.sm { min-height: 26px; padding: 0 8px; font-size: 11px; white-space: nowrap; }
+
+  /* 云端记录：三个按钮在窄屏换行，别把文件名挤没 */
+  .cloud-row { flex-wrap: wrap; gap: 6px; }
+  .cloud-ops { width: 100%; justify-content: flex-end; }
 
   /* ---------- 多栏 → 单列 ---------- */
   .today-grid,
@@ -217,7 +232,7 @@
 
   .modal-check, .chip, .seg, .tab { min-height: 34px; }
 
-  .toast-wrap { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); width: calc(100vw - 24px); }
+  .toast-wrap { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); width: calc(100vw - 24px); }
   .toast { width: 100%; font-size: 12.5px; }
 
   /* 日期条左右滑动切日的手感 */

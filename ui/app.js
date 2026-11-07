@@ -87,6 +87,8 @@
     music: '<path d="M9 18.2V5.8l11-2.2v12.6"/><circle cx="6.6" cy="18.2" r="2.4"/><circle cx="17.6" cy="16.2" r="2.4"/>',
     trash: '<path d="M4 6.6h16"/><path d="M9.4 6.6V4.7c0-.6.5-1.1 1.1-1.1h3c.6 0 1.1.5 1.1 1.1v1.9"/><path d="M6.2 6.6l.9 12.6c.06.9.8 1.6 1.7 1.6h6.4c.9 0 1.64-.7 1.7-1.6l.9-12.6"/><path d="M10.2 10.4v6.6M13.8 10.4v6.6"/>',
     restore: '<path d="M3.4 11.6l8.6-7.4 8.6 7.4"/><path d="M5.9 10.2v9.2h12.2v-9.2"/><path d="M12 20.2v-6M9.4 16.4l2.6-2.6 2.6 2.6"/>',
+    syncRing: '<path d="M20.6 12a8.6 8.6 0 11-3.1-6.6"/><path d="M17.6 2.4v3.8h-3.8"/>',
+    cloudCheck: '<path d="M7.2 18h9.4a3.6 3.6 0 00.5-7.2 5.2 5.2 0 00-9.9-1.3A3.7 3.7 0 007.2 18z"/><path d="M9.9 13.9l1.9 1.9 3.4-3.5"/>',
     grid: '<rect x="3.6" y="3.6" width="7" height="7" rx="1.6"/><rect x="13.4" y="3.6" width="7" height="7" rx="1.6"/><rect x="3.6" y="13.4" width="7" height="7" rx="1.6"/><rect x="13.4" y="13.4" width="7" height="7" rx="1.6"/>'
   };
   function icon(name, size) {
@@ -423,7 +425,86 @@
   if (!Array.isArray(S.ui.tabs) || !S.ui.tabs.length) S.ui.tabs = TAB_DEFAULT.slice();
   if (S.v !== 2) { S.v = 2; }
 
+  // ---------- 多设备同步：每条记录的修改时间 ----------
+  // 每条记录带一个 ut（修改时间戳），内存里带墓碑 tomb，合并时按条目取新、按墓碑删旧。
+  const SYNC_COLLECTIONS = ['tasks', 'projects', 'goals', 'habits', 'wishes', 'trivia', 'achievements', 'routines', 'hobbies', 'memos', 'trash'];
+
+  if (!S.meta || typeof S.meta !== 'object') S.meta = {};
+  if (!S.meta.tomb || typeof S.meta.tomb !== 'object') S.meta.tomb = {};
+  if (!S.meta.deviceId) S.meta.deviceId = 'dev-' + Math.random().toString(36).slice(2, 10);
+
+  let maxSeenUt = 0;
+  (function scanMaxUt() {
+    SYNC_COLLECTIONS.forEach(coll => (S[coll] || []).forEach(it => {
+      if (it && Number(it.ut) > maxSeenUt) maxSeenUt = Number(it.ut);
+    }));
+    Object.keys(S.meta.tomb).forEach(k => { if (Number(S.meta.tomb[k]) > maxSeenUt) maxSeenUt = Number(S.meta.tomb[k]); });
+  })();
+
+  function nextUt() {
+    const t = Math.max(Date.now(), maxSeenUt + 1);
+    maxSeenUt = t;
+    return t;
+  }
+
+  function itemSig(item) {
+    const o = {};
+    Object.keys(item).forEach(k => { if (k !== 'ut') o[k] = item[k]; });
+    return JSON.stringify(o);
+  }
+
+  function indexState(state) {
+    const map = {};
+    SYNC_COLLECTIONS.forEach(coll => {
+      (state[coll] || []).forEach(it => {
+        if (!it || it.id == null) return;
+        map[coll + ':' + it.id] = itemSig(it);
+      });
+    });
+    return map;
+  }
+
+  // 老数据没有 ut，升级时统一补一个基准时间，之后每次改动只更新被改的那几条
+  (function stampLegacy() {
+    const t = nextUt();
+    let stamped = false;
+    SYNC_COLLECTIONS.forEach(coll => (S[coll] || []).forEach(it => {
+      if (it && it.ut == null) { it.ut = t; stamped = true; }
+    }));
+    if (stamped) { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 忽略 */ } }
+  })();
+
+  let syncBase = indexState(S);
+
+  // 保存时对比上一次落盘的快照，找出新增/修改/删除并打时间戳与墓碑
+  function stampChanges() {
+    const prev = syncBase;
+    const next = indexState(S);
+    const t = nextUt();
+    let changed = false;
+    SYNC_COLLECTIONS.forEach(coll => (S[coll] || []).forEach(it => {
+      if (!it || it.id == null) return;
+      const key = coll + ':' + it.id;
+      if (!prev || prev[key] !== next[key]) { it.ut = t; changed = true; }
+    }));
+    if (prev) {
+      Object.keys(prev).forEach(key => {
+        if (!next[key] && !S.meta.tomb[key]) { S.meta.tomb[key] = t; changed = true; }
+      });
+    }
+    syncBase = next;
+    if (changed) onLocalChange();
+  }
+
+  function onLocalChange() {
+    S.meta.ut = nextUt();
+    // 用户第一次真正改动后就不再是演示数据，也不再每天重置
+    if (S.meta.demo) { S.meta.demo = false; S.meta.seedDate = null; }
+    try { scheduleAutoSync(); } catch (e) { /* 同步模块还没初始化，忽略 */ }
+  }
+
   function save() {
+    try { stampChanges(); } catch (e) { /* 同步标记失败不影响保存 */ }
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 无痕模式等场景忽略 */ }
   }
 
@@ -666,6 +747,14 @@
     return `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}:${m[6]}`;
   }
 
+  // 坚果云 PROPFIND 返回的是 RFC1123（Thu, 06 Nov 2026 05:08:24 GMT），转成本地时间
+  function fmtDavTime(s) {
+    if (!s) return '';
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return '';
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
   async function cloudList() {
     let cfg;
     try { cfg = readCloudInputs(); } catch (e) { toast(esc(e.message)); return; }
@@ -682,17 +771,20 @@
     files = (files || []).sort((a, b) => (a.name < b.name ? 1 : -1));
     const rows = files.map(f => {
       const t = cloudNameToTime(f.name);
-      const label = t || (f.name === 'latest.json' ? '最新一份（固定入口）' : esc(f.name));
+      const isSync = f.name === 'sync.json';
+      const label = t || (isSync ? 'sync.json（实时同步文件）' : (f.name === 'latest.json' ? '最新一份（固定入口）' : esc(f.name)));
+      const meta = [esc(fmtCloudSize(f.size)), fmtDavTime(f.modified) ? `${isSync ? '更新于' : ''}${fmtDavTime(f.modified)}`.trim() : ''].filter(Boolean).join(' · ');
       return `<div class="cloud-row">
-        <span class="cloud-name"><b>${label}</b><span>${esc(fmtCloudSize(f.size))}</span></span>
+        <span class="cloud-name"><b>${label}</b><span>${meta}</span></span>
         <span class="cloud-ops">
-          <button class="btn" data-act="jd-restore" data-id="${esc(f.name)}">恢复</button>
+          <button class="btn" data-act="jd-merge" data-id="${esc(f.name)}">合并</button>
+          <button class="btn" data-act="jd-restore" data-id="${esc(f.name)}">覆盖</button>
           <button class="btn" data-act="jd-del" data-id="${esc(f.name)}">删除</button>
         </span>
       </div>`;
     }).join('');
-    openModal(modalShell('坚果云云端备份', `/${CLOUD_FOLDER} · 共 ${files.length} 份备份`,
-      rows || '<div class="muted backup-hint">云端还没有备份，回到设置点「备份到坚果云」创建第一份。</div>',
+    openModal(modalShell('坚果云云端备份', `/${CLOUD_FOLDER} · 共 ${files.length} 个文件`,
+      rows || '<div class="muted backup-hint">云端还没有文件，回到设置点「同步云端」创建第一份。</div>',
       '<button class="btn" data-act="settings">返回设置</button><button class="btn btn-amber" data-act="m-close">关闭</button>'));
   }
 
@@ -701,6 +793,12 @@
     try {
       const raw = await tauriInvoke('webdav_download', { server: CLOUD_SERVER, username: cfg.user, password: cfg.pass, folder: CLOUD_FOLDER, filename: file });
       const payload = JSON.parse(raw);
+      // sync.json 是实时同步文件，格式不同：当成一份完整数据来覆盖
+      if (payload && payload.format === SYNC_FORMAT && payload.data) {
+        payload.format = BACKUP_FORMAT;
+        payload.version = BACKUP_VERSION;
+        payload.exportedAt = payload.updatedAt || new Date().toISOString();
+      }
       // 老备份补齐字段，和本地导入保持一致
       if (payload.data && !Array.isArray(payload.data.routines)) payload.data.routines = [];
       if (payload.data && !Array.isArray(payload.data.hobbies)) payload.data.hobbies = [];
@@ -753,6 +851,417 @@
     });
   }
 
+  // ---------- 多设备同步（按条目合并，不覆盖整包） ----------
+  const SYNC_FILE = 'sync.json';
+  const SYNC_FORMAT = 'mercury-plan-sync';
+  const SYNC_BEFORE_KEY = 'mercury.sync.before';
+  const SYNC_GAP = 20000;        // 两次自动同步之间的最小间隔
+  const SYNC_DEBOUNCE = 6000;    // 改动停下多久后自动上传
+  let syncTimer = null;
+  let syncReady = false;
+  let syncing = false;
+  let syncPending = false;
+
+  function autoSyncOn() {
+    const cfg = cloudCfg();
+    return cfg.autoSync !== false && !!cfg.user && !!cfg.pass;
+  }
+
+  function errText(e) { return typeof e === 'string' ? e : (e && e.message) || ''; }
+
+  // 设置页开着时直接用手输的值（安卓上经常输完不点测试连接就点同步）
+  function syncParams() {
+    const cfg = cloudCfg();
+    const uEl = document.getElementById('jdUser');
+    const pEl = document.getElementById('jdPass');
+    if (uEl && uEl.value.trim()) cfg.user = uEl.value.trim();
+    if (pEl && pEl.value) cfg.pass = pEl.value;
+    if (!cfg.user) throw new Error('请先填写坚果云账号（注册邮箱）');
+    if (!cfg.pass) throw new Error('请先填写坚果云应用密码');
+    saveCloudCfg(cfg);
+    return { cfg, base: { server: CLOUD_SERVER, username: cfg.user, password: cfg.pass, folder: CLOUD_FOLDER } };
+  }
+
+  function pruneTomb(tomb) {
+    const limit = Date.now() - 180 * 86400000;
+    const out = {};
+    Object.keys(tomb || {}).forEach(k => { if (Number(tomb[k]) >= limit) out[k] = tomb[k]; });
+    return out;
+  }
+
+  // 习惯打卡取两边较多次数，日常记录按 id 并集，避免整条覆盖时丢掉另一台设备的记录
+  function unionCounts(a, b) {
+    const out = { ...(b || {}) };
+    Object.keys(a || {}).forEach(k => {
+      out[k] = Math.max(Number(a[k]) || 0, Number(out[k]) || 0);
+    });
+    return out;
+  }
+
+  function unionById(a, b) {
+    const list = Array.isArray(b) ? b.slice() : [];
+    const seen = new Set(list.map(x => x && x.id));
+    (Array.isArray(a) ? a : []).forEach(x => { if (x && !seen.has(x.id)) { seen.add(x.id); list.push(x); } });
+    return list;
+  }
+
+  function mergeItem(coll, local, remote) {
+    const lu = Number(local.ut) || 0;
+    const ru = Number(remote.ut) || 0;
+    const pick = lu > ru ? local : (ru > lu ? remote : local);
+    if (coll === 'habits') return { ...pick, checks: unionCounts(local.checks, remote.checks) };
+    if (coll === 'routines') return { ...pick, logs: unionById(local.logs, remote.logs) };
+    if (coll === 'wishes') return { ...pick, items: unionById(local.items, remote.items) };
+    if (coll === 'hobbies') return { ...pick, logs: unionById(local.logs, remote.logs) };
+    return pick;
+  }
+
+  // 回收站条目里装的是哪条内容（用来判断同一条是不是已经有一条记录）
+  function trashSourceKeys(entry) {
+    const items = (entry && entry.items) || {};
+    const keys = [];
+    Object.keys(items).forEach(k => {
+      if (k === 'unlinked' || k === 'count') return;
+      (Array.isArray(items[k]) ? items[k] : []).forEach(x => { if (x && x.id != null) keys.push(k + ':' + x.id); });
+    });
+    return keys;
+  }
+
+  const TRASH_KIND = {
+    tasks: 'task', projects: 'project', goals: 'goal', habits: 'habit', wishes: 'wish',
+    trivia: 'trivia', achievements: 'achievement', routines: 'routine', hobbies: 'hobby', memos: 'memo'
+  };
+
+  // 合并两份数据：同 id 取 ut 新的，各自独有的条目都保留，墓碑时间晚于记录则视为删除
+  function mergeStates(localS, remoteS) {
+    const stats = { added: 0, updated: 0, deleted: 0 };
+    const tomb = { ...((localS.meta && localS.meta.tomb) || {}) };
+    const rTomb = (remoteS && remoteS.meta && remoteS.meta.tomb) || {};
+    Object.keys(rTomb).forEach(k => { if (!tomb[k] || rTomb[k] > tomb[k]) tomb[k] = rTomb[k]; });
+    const removedHere = []; // 本机有、被远端墓碑删掉的条目，补一条回收站记录
+
+    const out = {};
+    SYNC_COLLECTIONS.forEach(coll => {
+      const lmap = new Map();
+      const rmap = new Map();
+      (localS[coll] || []).forEach(it => { if (it && it.id != null) lmap.set(it.id, it); });
+      (((remoteS && remoteS[coll]) || [])).forEach(it => { if (it && it.id != null) rmap.set(it.id, it); });
+      const ids = new Set([...lmap.keys(), ...rmap.keys()]);
+      const list = [];
+      ids.forEach(id => {
+        const l = lmap.get(id);
+        const r = rmap.get(id);
+        let item;
+        if (l && r) {
+          item = mergeItem(coll, l, r);
+          if (itemSig(l) !== itemSig(r)) stats.updated++;
+        } else if (l) {
+          item = l;
+        } else {
+          item = r;
+          stats.added++;
+        }
+        const t = tomb[coll + ':' + id] || 0;
+        if (t && t >= (Number(item.ut) || 0)) {
+          stats.deleted++;
+          if (l && coll !== 'trash') removedHere.push({ coll, item });
+          return;
+        }
+        list.push(item);
+      });
+      out[coll] = list;
+    });
+
+    // 别的内容被远端删掉时，回收站里也留一条，手机上还能恢复
+    if (removedHere.length) {
+      const have = new Set();
+      (out.trash || []).forEach(e => trashSourceKeys(e).forEach(k => have.add(k)));
+      const extra = [];
+      removedHere.forEach(x => {
+        const key = x.coll + ':' + x.item.id;
+        if (have.has(key)) return;
+        have.add(key);
+        const it = x.item;
+        extra.push({
+          id: 'rt-' + x.coll + '-' + it.id,
+          kind: TRASH_KIND[x.coll] || x.coll,
+          title: it.title || it.text || it.name || '未命名',
+          count: 1,
+          meta: it.date || it.time || '',
+          at: Date.now(),
+          ut: Date.now(),
+          items: { [x.coll]: [it] }
+        });
+      });
+      if (extra.length) out.trash = extra.concat(out.trash || []);
+    }
+    // 同一条内容只留一条回收站记录（优先保留手动删除的那条，别出现两份）
+    if (Array.isArray(out.trash) && out.trash.length) {
+      const realKeys = new Set();
+      out.trash.forEach(e => { if (!/^rt-/.test(String(e.id))) trashSourceKeys(e).forEach(k => realKeys.add(k)); });
+      out.trash = out.trash.filter(e => !/^rt-/.test(String(e.id)) || !trashSourceKeys(e).some(k => realKeys.has(k)));
+    }
+
+    out.v = localS.v;
+    out.ui = localS.ui;
+    out.meta = { ...(localS.meta || {}), tomb: pruneTomb(tomb) };
+    const lu = Number(localS.meta && localS.meta.ut) || 0;
+    const ru = Number(remoteS && remoteS.meta && remoteS.meta.ut) || 0;
+    out.meta.ut = Math.max(lu, ru);
+    return { state: out, stats };
+  }
+
+  function dataSig(state) {
+    return JSON.stringify(SYNC_COLLECTIONS.map(c => (state[c] || []).map(itemSig)));
+  }
+
+  // 重绘时避开正在输入的框，防止同步把光标顶掉
+  function safeRender(left) {
+    const remain = left == null ? 6 : left;
+    const ae = document.activeElement;
+    const editing = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable);
+    if (editing && remain > 0) { setTimeout(() => safeRender(remain - 1), 1500); return; }
+    render(true);
+  }
+
+  function syncPayload() {
+    return {
+      format: SYNC_FORMAT,
+      version: 1,
+      app: '水星计划',
+      updatedAt: new Date().toISOString(),
+      deviceId: S.meta.deviceId,
+      data: S
+    };
+  }
+
+  // ---------- 同步状态标记：记录「哪条内容已经传上云」 ----------
+  const SYNC_MARK_KEY = 'mercury.sync.marks';
+  let lastFailAt = 0;
+
+  function loadMarks() {
+    try { return JSON.parse(localStorage.getItem(SYNC_MARK_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+
+  function markAllSynced(state) {
+    const marks = {};
+    SYNC_COLLECTIONS.forEach(coll => (state[coll] || []).forEach(it => {
+      if (it && it.id != null) marks[coll + ':' + it.id] = Number(it.ut) || 0;
+    }));
+    marks.__at = Date.now();
+    try { localStorage.setItem(SYNC_MARK_KEY, JSON.stringify(marks)); } catch (e) { /* 忽略 */ }
+  }
+
+  function isSynced(coll, item) {
+    if (!item || item.id == null) return false;
+    const marks = loadMarks();
+    return (Number(marks[coll + ':' + item.id]) || 0) >= (Number(item.ut) || 0);
+  }
+
+  // 列表里的同步状态：待上传转圈，已上传显示云勾；没配账号就不显示
+  function syncMark(coll, item) {
+    const cfg = cloudCfg();
+    if (!cfg.user || !cfg.pass) return '';
+    if (isSynced(coll, item)) {
+      return `<span class="sync-mark done" title="已同步到云端">${icon('cloudCheck', 11)}</span>`;
+    }
+    return `<span class="sync-mark pending" title="等待同步到云端">${icon('syncRing', 11)}</span>`;
+  }
+
+  // 还有几条没传上云；没配账号返回 -1（= 没开启同步）
+  function pendingSyncCount() {
+    const cfg = cloudCfg();
+    if (!cfg.user || !cfg.pass) return -1;
+    const marks = loadMarks();
+    let n = 0;
+    SYNC_COLLECTIONS.forEach(coll => (S[coll] || []).forEach(it => {
+      if (!it || it.id == null) return;
+      if ((Number(marks[coll + ':' + it.id]) || 0) < (Number(it.ut) || 0)) n++;
+    }));
+    return n;
+  }
+
+  // 状态栏右侧的同步提示：只在同步结束后局部刷新，不整页重绘
+  function syncBadge() {
+    const pend = pendingSyncCount();
+    const cfg = cloudCfg();
+    if (pend < 0) return { cls: '', text: '数据保存在本机' };
+    if (cfg.lastSyncError) return { cls: 'err', text: '云端同步失败' };
+    return pend ? { cls: 'warn', text: `${pend} 条待上传` } : { cls: 'ok', text: '云端已同步' };
+  }
+
+  function updateSyncBadge() {
+    const el = document.querySelector('#statusbar .sb-local');
+    if (!el) return;
+    const b = syncBadge();
+    el.className = 'sb-local' + (b.cls ? ' ' + b.cls : '');
+    el.title = b.text;
+    el.innerHTML = `<i></i>${esc(b.text)}`;
+  }
+
+  // 自动同步失败时也给个提示，同一分钟内只提示一次
+  function syncFailNote(e) {
+    const now = Date.now();
+    if (now - lastFailAt < 60000) return;
+    lastFailAt = now;
+    toast(`<b>云端同步失败</b>：${esc(errText(e) || '未知错误')}`);
+  }
+
+  function syncStatusText(cfg) {
+    if (cfg.lastSyncError) return `上次同步失败：${cfg.lastSyncError.msg}`;
+    return `上次同步：${cfg.lastSyncAt ? fmtCloudTime(cfg.lastSyncAt) : '从未同步'}`;
+  }
+
+  function updateSyncLabels() {
+    const cfg = cloudCfg();
+    const a = document.getElementById('jdSyncLast');
+    if (a) a.textContent = syncStatusText(cfg);
+    const b = document.getElementById('jdAutoState');
+    if (b) b.textContent = cfg.autoSync === false ? '已关闭' : '已开启';
+    const c = document.getElementById('jdLast');
+    if (c) c.textContent = `上次云备份：${fmtCloudTime(cfg.lastBackupAt)}`;
+    updateSyncBadge();
+  }
+
+  // 拉取云端 → 与本机按条目合并 → 写回本机 → 把合并结果传回云端
+  async function syncNow(opts) {
+    const o = opts || {};
+    if (o.silent && S.meta && S.meta.demo) return null; // 演示数据不上传
+    let cfg, base;
+    try { ({ cfg, base } = syncParams()); } catch (e) { if (!o.silent) toast(esc(e.message)); return null; }
+    if (syncing) { syncPending = true; return null; }
+    syncing = true;
+    const btn = document.getElementById(o.btnId || 'jdSync');
+    if (btn) { btn.disabled = true; btn.dataset.orig = btn.innerHTML; btn.innerHTML = esc('同步中…'); }
+
+    let result = null;
+    try {
+      let remote = null;
+      let first = false;
+      try {
+        const raw = await tauriInvoke('webdav_download', { ...base, filename: SYNC_FILE });
+        const payload = JSON.parse(raw);
+        if (payload && payload.format === SYNC_FORMAT && payload.data) remote = payload.data;
+      } catch (e) {
+        if (/不存在|404/.test(errText(e))) first = true;
+        else throw e;
+      }
+
+      let stats = { added: 0, updated: 0, deleted: 0 };
+      let touched = false;
+      if (remote) {
+        const merged = mergeStates(S, remote);
+        stats = merged.stats;
+        touched = dataSig(merged.state) !== dataSig(S);
+        if (touched) {
+          try { localStorage.setItem(SYNC_BEFORE_KEY, JSON.stringify(S)); } catch (e) { /* 存不下就算了 */ }
+          S = merged.state;
+          syncBase = indexState(S);
+          try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* 忽略 */ }
+        }
+      }
+
+      // 本机没有待上传、合并也没带来变化时不必重复上传，省掉一次云端写
+      const needUpload = first || !remote || touched || pendingSyncCount() > 0;
+      if (needUpload) {
+        await tauriInvoke('webdav_upload', { ...base, filename: SYNC_FILE, content: JSON.stringify(syncPayload()) });
+        markAllSynced(S);
+      }
+      cfg.lastSyncAt = new Date().toISOString();
+      delete cfg.lastSyncError;
+      saveCloudCfg(cfg);
+      try { localStorage.setItem('mercury.sync.at', String(Date.now())); } catch (e) { /* 忽略 */ }
+      if (touched || S.ui.route === 'memos') safeRender();
+      updateSyncLabels();
+      result = stats;
+
+      if (!o.silent) {
+        const parts = [];
+        if (stats.added) parts.push(`补入 ${stats.added} 条`);
+        if (stats.deleted) parts.push(`删除 ${stats.deleted} 条`);
+        if (stats.updated) parts.push(`更新 ${stats.updated} 条`);
+        if (parts.length) toast(`已同步 · ${parts.join('，')}`);
+        else toast(first ? '已创建云端同步库' : '两端已经一致');
+      }
+    } catch (e) {
+      if (!o.silent) cloudFail(e, '同步失败');
+      else { console.warn('[sync]', e); syncFailNote(e); }
+      try {
+        const c = cloudCfg();
+        c.lastSyncError = { at: Date.now(), msg: errText(e) || '未知错误' };
+        saveCloudCfg(c);
+      } catch (err) { /* 忽略 */ }
+      updateSyncLabels();
+    } finally {
+      syncing = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.orig || '同步云端';
+        delete btn.dataset.orig;
+      }
+      if (syncPending) { syncPending = false; scheduleAutoSync(3000); }
+    }
+    return result;
+  }
+
+  function scheduleAutoSync(delay) {
+    if (!syncReady || !autoSyncOn()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+      if (syncing) { syncPending = true; return; }
+      const last = Number(localStorage.getItem('mercury.sync.at') || 0);
+      const wait = SYNC_GAP - (Date.now() - last);
+      if (wait > 0) { scheduleAutoSync(wait + 500); return; }
+      if (S.meta && S.meta.demo) return; // 演示数据不上传
+      syncNow({ silent: true });
+    }, delay == null ? SYNC_DEBOUNCE : delay);
+  }
+
+  function toggleAutoSync() {
+    const cfg = cloudCfg();
+    cfg.autoSync = cfg.autoSync === false;
+    saveCloudCfg(cfg);
+    updateSyncLabels();
+    toast(cfg.autoSync === false ? '已关闭自动同步' : '已开启自动同步，改动后会自动上传');
+    if (cfg.autoSync !== false) scheduleAutoSync(2000);
+  }
+
+  // 手动挑一份云端备份与当前数据合并（不覆盖本机独有的内容）
+  async function cloudMerge(file) {
+    let cfg, base;
+    try { ({ cfg, base } = syncParams()); } catch (e) { toast(esc(e.message)); return; }
+    let payload;
+    try {
+      const raw = await tauriInvoke('webdav_download', { ...base, filename: file });
+      payload = JSON.parse(raw);
+    } catch (e) {
+      cloudFail(e, '读取云端备份失败');
+      return;
+    }
+    const remote = payload && payload.data ? payload.data : payload;
+    if (!remote || typeof remote !== 'object' || !Array.isArray(remote.tasks)) { toast('这份云端文件无法合并'); return; }
+    const merged = mergeStates(S, remote);
+    const st = merged.stats;
+    askConfirm({
+      title: '合并云端备份到本机？',
+      heading: '同步确认',
+      danger: false,
+      detail: `按条目合并：云端独有 ${st.added} 条会补进本机，本机独有的一条不丢，同一内容以较新的改动为准。合并结果会同时写回云端。`,
+      okText: '合并',
+      onOk: () => {
+        const touched = dataSig(merged.state) !== dataSig(S);
+        try { localStorage.setItem(SYNC_BEFORE_KEY, JSON.stringify(S)); } catch (e) { /* 忽略 */ }
+        S = merged.state;
+        syncBase = indexState(S);
+        save();
+        closeModal();
+        safeRender();
+        toast(touched ? `已合并 · 补入 ${st.added} 条` : '本机已包含云端全部内容');
+        syncNow({ silent: true });
+      }
+    });
+  }
+
   function openCloudHelp() {
     openModal(modalShell('获取坚果云应用密码', '应用密码不是登录密码，是专门给第三方应用用的一串独立密码。',
       `<ol class="help-steps">
@@ -792,6 +1301,21 @@
 
   function currentThemeId() {
     try { return themeById(localStorage.getItem(THEME_KEY)).id; } catch (e) { return 'graphite'; }
+  }
+
+  // ---------- 底部状态栏显示模式（仅移动端）：both = 图标+文字，icons = 仅图标 ----------
+  const TABMODE_KEY = 'mercury.tabbar';
+  function tabMode() {
+    try { return localStorage.getItem(TABMODE_KEY) === 'icons' ? 'icons' : 'both'; }
+    catch (e) { return 'both'; }
+  }
+  function applyTabMode(mode, persist) {
+    if (persist !== false) {
+      try { localStorage.setItem(TABMODE_KEY, mode === 'icons' ? 'icons' : 'both'); } catch (e) { }
+    }
+    const sb = document.getElementById('sidebar');
+    if (sb) sb.classList.toggle('tab-icons', mode === 'icons');
+    return mode;
   }
 
   // 删除都走这里：进回收站 → 可撤销 → 设置里还能「恢复删除」
@@ -1390,6 +1914,7 @@
   function statusHTML() {
     const st = statsOn(S.ui.cursor);
     const quit = S.habits.filter(h => h.kind === 'quit').sort((a, b) => quitStreak(b) - quitStreak(a))[0];
+    const badge = syncBadge();
     return `<div class="stat"><b>${st.taskDone}/${st.taskTotal}</b> 待办</div>
       <span class="dot-sep"></span>
       <div class="stat"><b>${st.habitDone}/${st.habitTotal}</b> 习惯</div>
@@ -1398,13 +1923,15 @@
       <span class="dot-sep"></span>
       <div class="stat"><b>${st.notes}</b> 条琐事</div>
       <div class="sb-right">
-        <span class="sb-local"><i></i>数据保存在本机</span>
+        <span class="sb-local ${badge.cls}" title="${esc(badge.text)}"><i></i>${esc(badge.text)}</span>
         <button class="btn sm" data-act="summary">今日小结</button>
       </div>`;
   }
 
   function render(resetScroll) {
-    document.getElementById('sidebar').innerHTML = sidebarHTML();
+    const sidebar = document.getElementById('sidebar');
+    sidebar.innerHTML = sidebarHTML();
+    sidebar.classList.toggle('tab-icons', tabMode() === 'icons');
     document.getElementById('topbar').innerHTML = topbarHTML();
     const view = document.getElementById('view');
     const top = resetScroll ? 0 : view.scrollTop;
@@ -2279,7 +2806,7 @@
       h += `<div class="memo-item ${cur && m.id === cur.id ? 'on' : ''}" data-act="memo-open" data-id="${m.id}">
         <h4>${esc(m.title || '未命名笔记')}</h4>
         <p>${esc(memoExcerpt(m.content)) || '空笔记'}</p>
-        <span class="m-time">${memoTime(m.updated)}</span>
+        <div class="m-foot"><span class="m-time">${memoTime(m.updated)}</span>${syncMark('memos', m)}</div>
       </div>`;
     });
     h += `</div></section>`;
@@ -2288,7 +2815,7 @@
       <div class="memo-doc-head">
         <div style="min-width:0">
           <h2>${esc(cur.title || '未命名笔记')}</h2>
-          <div class="memo-meta"><span>${memoTime(cur.updated)}</span><span class="dot-sep"></span><span>${memoWords(cur.content)} 字</span></div>
+          <div class="memo-meta"><span>${memoTime(cur.updated)}</span><span class="dot-sep"></span><span>${memoWords(cur.content)} 字</span>${syncMark('memos', cur)}</div>
         </div>
         <div class="memo-ops">
           <button class="btn sm" data-act="memo-edit" data-id="${cur.id}">${icon('pen', 13)} 编辑</button>
@@ -3098,10 +3625,18 @@
       <span class="theme-swatch" style="background:${t.swatch}"><i style="background:${t.accent}"></i></span>
       <span class="theme-name"><b>${t.name}</b><span>${t.hint}</span></span>
     </button>`).join('');
+    const tm = tabMode();
+    const tabModeUI = isMobile() ? `
+      <div class="set-label">底部状态栏</div>
+      <div class="seg" style="width:100%">
+        <button style="flex:1" data-act="tabmode-set" data-mode="both" class="${tm === 'both' ? 'on' : ''}">图标 + 文字</button>
+        <button style="flex:1" data-act="tabmode-set" data-mode="icons" class="${tm === 'icons' ? 'on' : ''}">仅图标</button>
+      </div>` : '';
 
     openModal(modalShell('设置', '数据保存在本机，可导出或云备份。',
       `<div class="set-label">外观主题</div>
        <div class="theme-grid">${themeOpts}</div>
+       ${tabModeUI}
        <div class="kv"><span class="k">存储方式</span><span class="v">本地 · localStorage</span></div>
        <div class="set-actions">
          <button class="btn" data-act="backup-export">${icon('arrowUp', 14)}导出备份</button>
@@ -3109,19 +3644,28 @@
        </div>
        <div class="muted backup-hint">备份包含全部用户数据和当前主题；导入会覆盖现有数据。</div>
        <div class="hr"></div>
-       <div class="set-label">坚果云云备份</div>
+       <div class="set-label">多设备同步（坚果云）</div>
        <input class="input" id="jdUser" placeholder="坚果云账号（注册邮箱）" value="${esc(jd.user || '')}" style="margin-bottom:8px">
        <input class="input" id="jdPass" type="password" placeholder="${jd.pass ? '应用密码已保存，可输入新密码替换' : '应用密码（不是登录密码）'}" style="margin-bottom:10px">
        <div class="set-actions" style="margin-top:0">
          <button class="btn" id="jdTest" data-act="jd-test">${icon('check', 14)}测试连接</button>
-         <button class="btn btn-amber" id="jdBackup" data-act="jd-backup">${icon('arrowUp', 14)}备份到坚果云</button>
+         <button class="btn btn-amber" id="jdSync" data-act="jd-sync">${icon('cycle', 14)}同步云端</button>
          <button class="btn" id="jdList" data-act="jd-list">${icon('db', 14)}云端记录</button>
        </div>
-       <div class="muted backup-hint">首次使用：登录坚果云网页版 → 账户信息 → 安全选项 → 添加应用密码。备份存放在坚果云的 /MercuryPlan/ 文件夹，账号和应用密码只保存在本机。</div>
+       <button class="set-row" data-act="jd-auto">
+         <span class="set-row-main">${icon('cycle', 15)}<span>自动同步</span></span>
+         <span class="set-row-side"><span id="jdAutoState">${jd.autoSync === false ? '已关闭' : '已开启'}</span>${icon('chevR', 14)}</span>
+       </button>
+       <button class="set-row" data-act="jd-backup">
+         <span class="set-row-main">${icon('arrowUp', 15)}<span>备份一份完整快照</span></span>
+         <span class="set-row-side" id="jdBackup">云端留存${icon('chevR', 14)}</span>
+       </button>
+       <div class="muted backup-hint">两端各记各的都不会丢：同步会把云端独有和本机独有的内容按条目合并，同一条以较新的改动为准。改完十几秒自动上传，打开应用时也会自动拉一次。</div>
        <button class="set-row" data-act="jd-help">
          <span class="set-row-main">${icon('restore', 15)}<span>如何获取坚果云应用密码？</span></span>
          <span class="set-row-side">查看教程${icon('chevR', 14)}</span>
        </button>
+       <div class="muted backup-hint" id="jdSyncLast">${syncStatusText(jd)}</div>
        <div class="muted backup-hint" id="jdLast">上次云备份：${fmtCloudTime(jd.lastBackupAt)}</div>
        <button class="set-row" data-act="trash-open">
          <span class="set-row-main">${icon('trash', 15)}<span>回收站</span></span>
@@ -3334,6 +3878,9 @@
       case 'jd-test': cloudTest(); break;
       case 'jd-backup': cloudBackup(); break;
       case 'jd-list': cloudList(); break;
+      case 'jd-sync': syncNow({ btnId: 'jdSync' }); break;
+      case 'jd-auto': toggleAutoSync(); break;
+      case 'jd-merge': cloudMerge(id); break;
       case 'jd-restore': cloudRestore(id); break;
       case 'jd-del': cloudDelete(id); break;
       case 'jd-help': openCloudHelp(); break;
@@ -3911,6 +4458,14 @@
         toast(`主题已切换为 <b>${t.name}</b>`);
         break;
       }
+      case 'tabmode-set': {
+        const mode = applyTabMode(el.dataset.mode === 'icons' ? 'icons' : 'both');
+        document.querySelectorAll('#modalLayer [data-act="tabmode-set"]').forEach(b => {
+          b.classList.toggle('on', b.dataset.mode === mode);
+        });
+        toast(mode === 'icons' ? '底部状态栏：<b>仅图标</b>' : '底部状态栏：<b>图标 + 文字</b>');
+        break;
+      }
       case 'trash-restore': {
         const entry = S.trash.find(x => x.id === id);
         if (!entry) break;
@@ -4046,5 +4601,25 @@
   if (qs.get('modal') === 'capture') setTimeout(openCapture, 60);
   if (qs.get('modal') === 'memo') setTimeout(() => openMemoEditor(qs.get('id') || null), 60);
 
+  // 同步：启动后拉一次云端，之后每 5 分钟兜底对一次
+  syncReady = true;
+  if (autoSyncOn()) {
+    setTimeout(() => syncNow({ silent: true }), 3000);
+    // 不再看 visibilityState：安卓 WebView 熄屏再来时经常长时间卡在 hidden，会把拉取卡死
+    setInterval(() => { if (autoSyncOn()) syncNow({ silent: true }); }, 5 * 60 * 1000);
+  }
+  // 兜底：用户一碰屏幕就补一次拉取（后台定时器会被系统冻结，回来时未必有事件）
+  function catchUpSync() {
+    if (!autoSyncOn()) return;
+    const last = Number(localStorage.getItem('mercury.sync.at') || 0);
+    if (Date.now() - last < 60000) return;
+    scheduleAutoSync(800);
+  }
+  ['pointerdown', 'keydown', 'focus'].forEach(ev => {
+    document.addEventListener(ev, catchUpSync, { passive: true });
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && autoSyncOn()) scheduleAutoSync(2500);
+  });
 
 })();
