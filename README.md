@@ -140,10 +140,10 @@ npx tauri icon assets\icon-256.png -o icons
 ### 构建命令
 
 ```powershell
-# release 签名包（每次构建前自动把版本号 patch +1）
+# release 签名包（每次构建前自动把版本号 patch +1，并归档到 dist/android/）
 npm run android:apk
 
-# 不动版本号重新构建
+# 不动版本号重新构建（同样归档）
 npm run android:apk:keep
 
 # debug 包（可直接 adb 安装，无需签名配置）
@@ -152,17 +152,26 @@ npx tauri android build --apk --debug
 
 ### APK 输出目录
 
+`npm run android:apk` / `android:apk:keep` 构建完成后，APK 仍会留在 Gradle 的原始输出目录，并**额外复制一份带版本号和时间戳的归档副本**到 `dist/android/`，不会覆盖历史包。
+
 | 包类型 | 路径（相对项目根） |
 | --- | --- |
 | release（universal，含全部 4 种 ABI） | `src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk` |
 | debug（universal） | `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk` |
 | debug（arm64 单架构） | `src-tauri/gen/android/app/build/outputs/apk/arm64/debug/app-arm64-debug.apk` |
+| 归档副本（脚本生成，仅 release） | `dist/android/mercury-plan-v<版本号>-<时间戳>-universal.apk` |
 
-发给别人安装时建议把 APK 重命名为 `mercury-plan-<版本号>.apk`，避免中文文件名在部分手机上乱码。
+- 每次归档会往 `dist/android/builds.txt` 追加一行（时间戳、版本号、versionCode、文件名），方便回溯每个包是哪次构建的
+- 直接用 `npx tauri android build` 构建不会产生 `dist/` 副本，产物只在上面 Gradle 的原始路径
+- `dist/` 已被 `.gitignore` 排除，不会提交进 Git；发给别人时直接用归档副本即可（文件名已是英文 + 版本号）
 
 ### 安装与升级
 
 ```powershell
+# 推荐：装 dist/android 下带版本号的那份（文件名换成实际的）
+adb install -r "dist/android/mercury-plan-v0.2.6-20261107-1800-universal.apk"
+
+# 或直接装 Gradle 最新输出（每次构建都会被覆盖）
 adb install -r "src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
 ```
 
@@ -240,6 +249,7 @@ Mercury_Plan_Android/
 ├── scripts/                # 构建辅助脚本（版本号自增等）
 ├── src-tauri/              # Rust/Tauri 后端和打包配置
 │   └── gen/android/        # Tauri 生成的 Android 工程（gradle、Manifest、图标）
+├── dist/android/           # 归档的 APK 副本 + builds.txt（不入库）
 ├── package.json            # Node/Tauri CLI 依赖与构建命令
 ├── package-lock.json       # Node 依赖锁文件
 ├── rust-toolchain.toml     # Rust 工具链要求
