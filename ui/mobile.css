@@ -15,7 +15,12 @@
   /* ---------- 侧栏 → 底部 tab 栏 ---------- */
   .sidebar {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto;
-    width: auto; height: 64px;
+    /* 高度要把系统手势条/导航栏的安全区加进去：全局是 border-box，
+       若只写 64px 再配 padding-bottom，内边距会直接吃掉内容区（安卓 16 上 env=42，
+       内容区只剩 21px，图标被裁、文字标签整条消失）。 */
+    height: 64px; /* 老 WebView 不支持 env() 时的兜底 */
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    width: auto;
     padding: 0 0 env(safe-area-inset-bottom, 0px);
     display: flex; flex-direction: row; align-items: stretch;
     border-right: 0; border-top: 1px solid var(--line);

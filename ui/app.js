@@ -24,6 +24,17 @@
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const sum = arr => arr.reduce((a, b) => a + b, 0);
 
+  // 应用版本号：设置页底部展示，方便确认手里装的是哪一版（浏览器预览时留空）
+  let APP_VER = '';
+  (function readAppVersion() {
+    try {
+      const t = window.__TAURI__;
+      if (t && t.app && t.app.getVersion) {
+        t.app.getVersion().then(v => { APP_VER = v || ''; }).catch(() => {});
+      }
+    } catch (e) { /* 忽略 */ }
+  })();
+
   function fmtMD(k) { const d = parse(k); return `${d.getMonth() + 1}月${d.getDate()}日`; }
   function fmtMDW(k) { const d = parse(k); return `${d.getMonth() + 1}月${d.getDate()}日 周${DOW[d.getDay()]}`; }
   function fmtShort(k) { const d = parse(k); return `${pad(d.getMonth() + 1)}.${pad(d.getDate())}`; }
@@ -3672,7 +3683,8 @@
          <span class="set-row-side">${n ? n + ' 条可恢复' : '空'}${icon('chevR', 14)}</span>
        </button>
        <div class="hr"></div>
-       <div class="muted" style="font-size:11px;line-height:1.7">这是用于确认交互的原型，数据仅用于演示。正式版会换成本地数据库并自动备份。<br>删除操作都有撤销：按 <span class="kbd">Ctrl Z</span>，或者到回收站里恢复。</div>`,
+       <div class="muted" style="font-size:11px;line-height:1.7">这是用于确认交互的原型，数据仅用于演示。正式版会换成本地数据库并自动备份。<br>删除操作都有撤销：按 <span class="kbd">Ctrl Z</span>，或者到回收站里恢复。</div>
+       <div class="muted" style="font-size:11px;opacity:.75;margin-top:10px">版本 v${esc(APP_VER || '—')}</div>`,
       `<button class="btn btn-danger" data-act="reset-ask">重置演示数据</button>
        <button class="btn" data-act="m-close">关闭</button>`));
   }

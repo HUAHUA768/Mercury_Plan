@@ -11,8 +11,8 @@
     "bump:major": "node scripts/bump.js major",
     "android:init": "tauri android init",
     "android:dev": "tauri android dev",
-    "android:apk": "node scripts/bump.js && tauri android build --apk",
-    "android:apk:keep": "tauri android build --apk"
+    "android:apk": "node scripts/bump.js && tauri android build --apk && node scripts/android-apk.js",
+    "android:apk:keep": "tauri android build --apk && node scripts/android-apk.js"
   },
   "engines": {
     "node": ">=20"
